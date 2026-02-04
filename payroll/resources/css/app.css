@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@import "./dashboard.css";
+
+@layer components {
+    /* 1. GLOBAL & LAYOUT */
+    .login-body {
+        @apply min-h-screen flex items-center justify-center bg-slate-50 font-sans p-6;
+        background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+        background-size: 24px 24px;
+    }
+
+    /*  Login Card & Sidebar styles  */
+    
+    .sidebar {
+        @apply w-64 bg-teal-800 text-white flex flex-col shadow-2xl z-10;
+    }
+    
+    /* Sidebar/Login code */
+    .logo-container { @apply h-24 flex flex-col items-center justify-center border-b border-white/10 shadow-sm bg-teal-900; }
+    .logo-text { @apply text-3xl font-black tracking-widest; }
+    .logo-subtext { @apply text-xs text-teal-200 uppercase tracking-widest mt-1; }
+    .nav-menu { @apply flex-1 px-4 space-y-2 overflow-y-auto mt-6; }
+    .nav-link { @apply flex items-center gap-3 p-3 text-teal-100 hover:bg-teal-700 rounded-lg transition; }
+    .nav-link-active { @apply flex items-center gap-3 p-3 bg-teal-700 rounded-lg text-white transition shadow-inner border border-teal-600; }
+    .logout-container { @apply p-4 border-t border-white/10 bg-teal-900 mb-2; }
+    .logout-btn { @apply w-full flex items-center justify-between p-2 text-sm text-teal-200 hover:text-white transition; }
+    
+    /* Login components */
+    .login-card { @apply w-full max-w-[400px] bg-white p-10 rounded-xl shadow-xl border border-slate-200 relative overflow-hidden; }
+    .login-card::before { content: ""; @apply absolute top-0 left-0 w-full h-1.5 bg-teal-700; }
+    .login-title { @apply text-2xl font-bold text-teal-800 mb-2 tracking-tight text-center uppercase; }
+    .login-subtitle { @apply text-sm text-slate-500 mb-8 text-center font-medium; }
+    .form-group { @apply mb-5; }
+    .form-input { @apply w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-700 text-sm outline-none transition-all duration-200 focus:border-teal-600 focus:ring-4 focus:ring-teal-50; }
+    .input-label { @apply block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1; }
+    .btn-login { @apply w-full py-3.5 bg-gradient-to-r from-teal-700 to-teal-600 text-white font-bold rounded-lg text-sm uppercase tracking-wider transition-all duration-200 shadow-lg shadow-teal-900/10 hover:to-teal-700 hover:shadow-teal-900/20 active:scale-[0.98]; }
+    .error-msg { @apply text-red-500 text-xs font-semibold mt-2 flex items-center gap-1 animate-pulse; }
+}
+
+/* Employee Status Badges */
+.badge-active {
+    @apply bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border border-teal-100;
+}
+.badge-inactive {
+    @apply bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border border-slate-200;
+}
+.badge-leave {
+    @apply bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border border-amber-100;
+}

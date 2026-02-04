@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@layer components {
+
+    .sdsc-blue-bg {
+        @apply bg-[#003366]; 
+    }
+
+    /*  LOGIN PAGE COMPONENTS */
+    .login-body {
+        @apply min-h-screen flex items-center justify-center bg-slate-100 font-sans p-6;
+
+        /* sdsc logo */
+        background-image: radial-gradient(#cbd5e1 1px, transparent 1px), radial-gradient(#cbd5e1 1px, transparent 1px);
+        background-size: 20px 20px;
+    }
+
+    .login-card {
+        @apply w-full max-w-[400px] bg-white p-10 rounded-2xl shadow-2xl border border-white/50 relative overflow-hidden;
+    }
+    
+    .login-card::before {
+        content: "";
+        @apply absolute top-0 left-0 w-full h-1.5 sdsc-blue-bg;
+    }
+
+    .login-title {
+        @apply text-2xl font-black text-[#003366] mb-2 tracking-tight text-center uppercase;
+    }
+    
+    .login-subtitle {
+        @apply text-sm text-slate-500 mb-8 text-center font-medium;
+    }
+
+    .form-group {
+        @apply mb-5;
+    }
+
+    .form-input {
+        @apply w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-700 text-sm outline-none transition-all duration-200;
+        @apply focus:border-[#003366] focus:ring-4 focus:ring-blue-50;
+    }
+    
+    .input-label {
+        @apply block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1;
+    }
+
+    .btn-login {
+        @apply w-full py-3.5 sdsc-blue-bg text-white font-bold rounded-lg text-sm uppercase tracking-wider transition-all duration-200 shadow-lg shadow-blue-900/20;
+        @apply hover:bg-blue-800 hover:shadow-blue-900/40;
+        @apply active:scale-[0.98] active:bg-blue-900;
+    }
+
+    .error-msg {
+        @apply text-red-500 text-xs font-semibold mt-2 flex items-center gap-1 animate-pulse;
+    }
+
+    /* 3. DASHBOARD & SIDEBAR */
+    .sidebar {
+        @apply w-64 sdsc-blue-bg text-white flex flex-col shadow-2xl z-10;
+    }
+    .logo-container {
+        @apply h-24 flex flex-col items-center justify-center border-b border-white/10 shadow-sm;
+    }
+    .logo-text {
+        @apply text-3xl font-black tracking-widest;
+    }
+    .logo-subtext {
+        @apply text-xs text-blue-300 uppercase tracking-widest mt-1;
+    }
+    
+    /* Navigation */
+    .nav-menu {
+        @apply flex-1 px-4 space-y-2 overflow-y-auto mt-6;
+    }
+    .nav-link {
+        @apply flex items-center gap-3 p-3 text-blue-100 hover:bg-blue-800 rounded-lg transition;
+    }
+    .nav-link-active {
+        @apply flex items-center gap-3 p-3 bg-blue-800/50 rounded-lg text-white transition hover:bg-blue-700 shadow-inner;
+    }
+    
+    /* Logout */
+    .logout-container {
+        @apply p-4 border-t border-white/10 bg-[#002855] mb-6;
+    }
+    .logout-btn {
+        @apply w-full flex items-center justify-between p-2 text-sm text-blue-200 hover:text-white transition;
+    }
+
+    /* Dashboard Cards & Tables */
+    .page-header {
+        @apply bg-white border-b border-slate-200 h-16 flex items-center justify-between px-8 shadow-sm;
+    }
+    .card {
+        @apply bg-white p-6 rounded-xl shadow-sm border border-slate-200 transition hover:shadow-md;
+    }
+    .stat-label {
+        @apply text-xs font-bold text-slate-400 uppercase tracking-wider;
+    }
+    .stat-number {
+        @apply text-3xl font-black text-[#003366] mt-2;
+    }
+    .stat-badge-green {
+        @apply bg-green-50 text-green-600 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-wide;
+    }
+    .table-container {
+        @apply bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden;
+    }
+    .table-head {
+        @apply bg-slate-50 text-slate-500 font-bold uppercase text-xs;
+    }
+    .table-cell {
+        @apply px-6 py-4 text-sm text-slate-600;
+    }
+    .btn-action {
+        @apply w-full sdsc-blue-bg text-white p-3 rounded-lg font-bold transition shadow-md hover:bg-blue-800 flex items-center justify-center gap-2;
+    }
+    .btn-secondary {
+        @apply w-full bg-white border border-slate-200 text-slate-700 p-3 rounded-lg font-bold transition hover:bg-slate-50 flex items-center justify-center gap-2;
+    }
+}
