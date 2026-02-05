@@ -30,6 +30,6 @@ class AttendanceController extends Controller
             ],
         ];
 
-        return view('layouts.attendance', compact('attendance'));
+        return view('attendance', compact('attendance'));
     }
 }

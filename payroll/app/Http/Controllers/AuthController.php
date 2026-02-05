@@ -19,7 +19,7 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
-        if ($request->email !== 'admin@payroll.com') {
+        if ($request->email !== 'admin@sdsc.edu.ph') {
         return back()->withErrors([
             'email' => 'Access Restricted.',
         ])->onlyInput('email');
@@ -34,4 +34,14 @@ class AuthController extends Controller
             'email' => 'Invalid login credentials.',
         ]);
     }
+    // Add this inside AuthController class
+
+        public function logout(Request $request)
+        {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/login'); 
+        }
 }
