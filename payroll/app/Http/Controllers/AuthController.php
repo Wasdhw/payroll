@@ -21,7 +21,7 @@ class AuthController extends Controller
 
         if ($request->email !== 'admin@sdsc.edu.ph') {
         return back()->withErrors([
-            'email' => 'Access Restricted.',
+            'email' => 'Access Denied.',
         ])->onlyInput('email');
     }
 
@@ -34,7 +34,6 @@ class AuthController extends Controller
             'email' => 'Invalid login credentials.',
         ]);
     }
-    // Add this inside AuthController class
 
         public function logout(Request $request)
         {
