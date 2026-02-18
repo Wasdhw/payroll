@@ -55,7 +55,7 @@
         @apply text-red-500 text-xs font-semibold mt-2 flex items-center gap-1 animate-pulse;
     }
 
-    /* 3. DASHBOARD & SIDEBAR */
+    /* DASHBOARD & SIDEBAR */
     .sidebar {
         @apply w-64 sdsc-blue-bg text-white flex flex-col shadow-2xl z-10;
     }

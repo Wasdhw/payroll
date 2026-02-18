@@ -31,15 +31,15 @@
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Manage Account</p>
             </div>
 
-            <a href="{{ route('profile.edit') }}" class="dropdown-link">👤 My Profile</a>
+            <a href="{{ route('profile.edit') }}" class="dropdown-link"> My Profile</a>
             
             @if(Auth::user()->role === 'super_admin')
-                <a href="{{ route('settings.index') }}" class="dropdown-link border-b border-slate-100">⚙️ Settings</a>
+                <a href="{{ route('settings.index') }}" class="dropdown-link border-b border-slate-100"> Settings</a>
             @endif
 
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="dropdown-link-danger">🚪 Log Out</button>
+                <button type="submit" class="dropdown-link-danger"> Log Out</button>
             </form>
         </div>
 
@@ -121,16 +121,16 @@
             <h3 class="font-bold text-slate-700 mb-4">Quick Actions</h3>
             <div class="space-y-3">
                 <a href="{{ route('employees.create') }}" class="btn-action w-full flex items-center justify-center gap-2">
-                    <span>➕</span> Add Employee
+                    <span></span> Add Employee
                 </a>
                 
                 <button class="btn-secondary w-full">
-                    <span>📄</span> Generate Slip
+                    <span></span> Generate Slip
                 </button>
                 
                 @if(Auth::user()->role === 'super_admin')
                 <a href="{{ route('settings.index') }}" class="btn-secondary w-full flex items-center justify-center gap-2">
-                    <span>⚙️</span> Settings
+                    <span></span> Settings
                 </a>
                 @endif
             </div>

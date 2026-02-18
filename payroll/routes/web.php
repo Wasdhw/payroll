@@ -34,8 +34,8 @@ Route::middleware('auth')->group(function () {
     
     // Employee Management
     Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
-    Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create'); // Shows the form
-    Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store'); // Saves the data
+    Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create'); 
+    Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store'); 
 
     // Attendance Route
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance');
