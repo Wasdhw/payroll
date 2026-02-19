@@ -7,6 +7,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PayrollController;
 
 Route::get('/', function () {
     return view('login');
@@ -36,10 +37,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
     Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create'); 
     Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store'); 
+    Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
+    Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
 
     // Attendance Route
-    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance');
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
 
+    // Payroll Route
+    Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
+    Route::post('/payroll/store', [PayrollController::class, 'store'])->name('payroll.store');
+    Route::get('/payroll/history', [PayrollController::class, 'history'])->name('payroll.history');
+    Route::get('/payroll/batch/{id}', [PayrollController::class, 'show'])->name('payroll.show');
+    Route::get('/payroll/download-slip/{id}', [PayrollController::class, 'downloadSlip'])->name('payroll.download-slip');
+    Route::get('/payroll/batch/{id}/print-all', [App\Http\Controllers\PayrollController::class, 'printBatch'])->name('payroll.print-batch');
+    
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

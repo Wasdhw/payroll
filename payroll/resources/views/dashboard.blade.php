@@ -34,7 +34,7 @@
             <a href="{{ route('profile.edit') }}" class="dropdown-link"> My Profile</a>
             
             @if(Auth::user()->role === 'super_admin')
-                <a href="{{ route('settings.index') }}" class="dropdown-link border-b border-slate-100"> Settings</a>
+                <a href="{{ route('settings.index') }}" class="dropdown-link border-b border-slate-100"> Register</a>
             @endif
 
             <form method="POST" action="{{ route('logout') }}">
@@ -72,19 +72,35 @@
             </div>
         </a>
 
-        <div class="card">
+        <div class="card flex flex-col justify-between">
             <div class="flex justify-between items-start">
                 <div>
-                    <p class="stat-label">Monthly Payroll</p>
-                    <h3 class="stat-number">₱{{ number_format($totalPayroll, 2) }}</h3>
+                    <p class="stat-label">15-Day Payroll Est.</p>
+                    <h3 class="stat-number text-teal-700">₱{{ number_format($totalPayroll, 2) }}</h3>
                 </div>
+            </div>
+            <div class="mt-4">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                    Current Period Additions Included
+                </p>
             </div>
         </div>
 
-        <div class="bg-[#003366] text-white p-6 rounded-xl shadow-lg border bg-gradient-to-br from-teal-800 to-teal-600">
-            <p class="text-xs font-bold text-blue-200 uppercase tracking-wider">Next Pay Date</p>
-            <h3 class="text-3xl font-black mt-2">Jan 31</h3>
-            <p class="text-xs text-blue-300 mt-4">Period: Jan 16 - Jan 30</p>
+        @php
+            // Automatically format the dates based on the $isFirstHalf variable from the Controller
+            $payDate = $isFirstHalf ? date('M 15, Y') : date('M t, Y');
+            $periodStart = $isFirstHalf ? date('M 01') : date('M 16');
+            $periodEnd = $isFirstHalf ? date('M 15') : date('M t');
+        @endphp
+
+        <div class="bg-[#003366] text-white p-6 rounded-xl shadow-lg border bg-gradient-to-br from-teal-800 to-teal-600 flex flex-col justify-between">
+            <div>
+                <p class="text-xs font-bold text-teal-100 uppercase tracking-wider">Next Pay Date</p>
+                <h3 class="text-3xl font-black mt-2">{{ $payDate }}</h3>
+            </div>
+            <p class="text-xs text-teal-200 mt-4 font-medium bg-teal-900/30 w-fit px-3 py-1.5 rounded-lg">
+                Period: {{ $periodStart }} - {{ $periodEnd }}
+            </p>
         </div>
     </div>
 

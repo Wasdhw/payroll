@@ -18,7 +18,11 @@
             <nav class="nav-menu">
                 <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'nav-link-active' : 'nav-link' }}">Dashboard</a>
                 <a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.index') ? 'nav-link-active' : 'nav-link' }}">Employees</a>
-                <a href="{{ route('attendance') }}" class="{{ request()->routeIs('attendance') ? 'nav-link-active' : 'nav-link' }}">Attendance</a>
+                <a href="{{ route('attendance.index') }}" class="{{ request()->routeIs('attendance.index') ? 'nav-link-active' : 'nav-link' }}">Attendance</a>
+                <a href="{{ route('payroll.index') }}" class="{{ request()->routeIs('payroll.index') ? 'nav-link-active' : 'nav-link' }}">Process</a>
+                <a href="{{ route('payroll.history') }}" class="{{ request()->routeIs('payroll.history') ? 'nav-link-active' : 'nav-link' }}">History</a>
+
+
             </nav>
 
         </aside>

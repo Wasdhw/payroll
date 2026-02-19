@@ -7,21 +7,45 @@ use Illuminate\Http\Request;
 
 class EmployeeController extends Controller
 {
-    // 1. Show the List of Employees
     public function index()
     {
         $employees = Employee::latest()->get();
         return view('employees.index', compact('employees'));
     }
 
-    // 2. Show the "Add Employee" Form
     public function create()
     {
         return view('employees.create');
     }
 
+public function edit(Employee $employee)
+    {
+    return view('employees.edit', compact('employee'));
+    }
+
+public function update(Request $request, Employee $employee)
+    {
+    $validated = $request->validate([
+        'first_name' => 'required',
+        'last_name' => 'required',
+        'email' => 'required|email',
+        'phone' => 'required|numeric',
+        'salary' => 'required|numeric',
+        'salary_type' => 'required|string',
+        'address' => 'required',
+        'department' => 'required',
+        'job_title' => 'required',
+        'salary' => 'required|numeric',
+        'status' => 'required',
+    ]);
+
+    $employee->update($validated);
+
+    return redirect()->route('employees.index')->with('success', 'Employee updated successfully!');
+    }
+
 public function store(Request $request)
-{
+    {
     $validated = $request->validate([
         // REQUIRED FIELDS (Will turn red if empty)
         'employee_id'            => 'required|unique:employees',
@@ -50,5 +74,5 @@ public function store(Request $request)
     Employee::create($validated);
 
     return redirect()->route('employees.index')->with('success', 'Employee Record Created!');
-}
+    }
 }

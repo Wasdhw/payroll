@@ -20,6 +20,7 @@ class Employee extends Model
         'address',
         'phone',
         'email',
+        'salary_type',
         'emergency_contact_name',
         'emergency_contact_phone',
         'department',
@@ -31,4 +32,9 @@ class Employee extends Model
         'status',
         'supervisor',
     ];
+    
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
 }

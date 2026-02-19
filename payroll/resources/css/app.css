@@ -77,3 +77,11 @@
 .badge-leave {
     @apply bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border border-amber-100;
 }
+
+.employee-txt{
+    @apply block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2;
+}
+
+.employee-tbl{
+    @apply w-full rounded-xl border-slate-300 py-3 px-4 focus:ring-teal-500 focus:border-teal-500 shadow-sm
+}

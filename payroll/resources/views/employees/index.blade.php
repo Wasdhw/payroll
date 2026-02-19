@@ -13,7 +13,7 @@
     </div>
 
     @if (session('success'))
-        <div x-data="{ show: true }" x-show="show" class="mb-6 bg-teal-50 border border-teal-200 text-teal-800 px-4 py-3 rounded-xl">
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)" class="mb-6 bg-teal-50 border border-teal-200 text-teal-800 px-4 py-3 rounded-xl transition-all">
             ✅ {{ session('success') }}
         </div>
     @endif
@@ -26,7 +26,7 @@
                     <th class="px-6 py-4">Job Title</th>
                     <th class="px-6 py-4">Department</th>
                     <th class="px-6 py-4">Status</th>
-                    <th class="px-6 py-4">Salary</th>
+                    <th class="px-6 py-4">Compensation</th>
                     <th class="px-6 py-4 text-right">Action</th>
                 </tr>
             </thead>
@@ -35,22 +35,38 @@
                 <tr class="hover:bg-slate-50 transition">
                     <td class="px-6 py-4">
                         <p class="font-bold text-slate-700">{{ $employee->first_name }} {{ $employee->last_name }}</p>
-                        <p class="text-xs text-slate-400">{{ $employee->email }}</p>
+                        <p class="text-[10px] font-mono text-teal-600">
+                            @if($employee->employee_id) {{ $employee->employee_id }} @else EMP-00{{ $employee->id }} @endif
+                        </p>
                     </td>
                     <td class="px-6 py-4 font-medium">{{ $employee->job_title }}</td>
                     <td class="px-6 py-4">
-                        <span class="bg-slate-100 text-slate-600 py-1 px-3 rounded-full text-xs font-bold">
+                        <span class="bg-slate-100 text-slate-600 py-1 px-3 rounded-full text-[10px] font-bold uppercase">
                             {{ $employee->department }}
                         </span>
                     </td>
                     <td class="px-6 py-4">
-                        <span class="bg-emerald-100 text-emerald-700 py-1 px-3 rounded-full text-xs font-bold">
-                            Active
-                        </span>
+                        @if($employee->status === 'Active')
+                            <span class="bg-emerald-100 text-emerald-700 py-1 px-3 rounded-full text-[10px] font-bold uppercase">Active</span>
+                        @elseif($employee->status === 'On Leave')
+                            <span class="bg-amber-100 text-amber-700 py-1 px-3 rounded-full text-[10px] font-bold uppercase">On Leave</span>
+                        @else
+                            <span class="bg-slate-100 text-slate-500 py-1 px-3 rounded-full text-[10px] font-bold uppercase">{{ $employee->status }}</span>
+                        @endif
                     </td>
-                    <td class="px-6 py-4 font-mono text-slate-700">₱{{ number_format($employee->salary, 2) }}</td>
+                    
+                    <td class="px-6 py-4 font-mono">
+                        <div class="text-slate-700 font-bold text-sm">₱{{ number_format($employee->salary, 2) }}</div>
+                        <div class="text-[9px] text-teal-600 font-bold uppercase tracking-wider mt-0.5 bg-teal-50 border border-teal-100 w-fit px-2 py-0.5 rounded">
+                            {{ $employee->salary_type ?? 'Monthly' }}
+                        </div>
+                    </td>
+
                     <td class="px-6 py-4 text-right">
-                        <button class="text-slate-400 hover:text-teal-600 font-bold transition">Edit</button>
+                        <a href="{{ route('employees.edit', $employee->id) }}" 
+                           class="text-xs font-bold uppercase transition-colors px-4 py-2 rounded-lg border shadow-sm text-slate-500 hover:bg-slate-100 bg-white border-slate-300">
+                            Edit
+                        </a>
                     </td>
                 </tr>
                 @empty
