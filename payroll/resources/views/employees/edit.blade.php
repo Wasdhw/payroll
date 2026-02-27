@@ -1,11 +1,28 @@
 @extends('layouts.app')
 
 @section('content')
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
 <div class="max-w-6xl mx-auto py-12 px-6">
     
     <div class="mb-10">
         <h2 class="text-3xl font-bold text-slate-800 tracking-tight">Edit Employee Record</h2>
     </div>
+
+    {{-- Global Error Alert --}}
+    @if ($errors->any())
+        <div x-data="{ show: true }" x-show="show" class="mb-8 bg-red-50 border border-red-200 text-red-800 px-6 py-4 rounded-2xl shadow-sm relative transition-all" x-transition>
+            <button @click="show = false" type="button" class="absolute top-4 right-4 text-red-500 hover:text-red-700 font-bold text-lg leading-none">&times;</button>
+            <p class="text-xs font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+                <span>⚠️</span> Please fix the following errors:
+            </p>
+            <ul class="list-disc pl-9 text-sm font-medium text-red-700">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <form action="{{ route('employees.update', $employee->id) }}" method="POST">
         @csrf
@@ -98,7 +115,7 @@
                         <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">
                             Contact Number <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" name="phone" value="{{ old('phone', $employee->phone) }}"
+                        <input type="text" name="phone" value="{{ old('phone', $employee->phone) }}" maxlength="11"
                                class="w-full rounded-xl py-3 px-4 transition-all @error('phone') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm">
                         @error('phone') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                     </div>
@@ -121,7 +138,7 @@
 
                     <div class="md:col-span-1">
                         <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">Emergency Number</label>
-                        <input type="text" name="emergency_contact_phone" value="{{ old('emergency_contact_phone', $employee->emergency_contact_phone) }}"
+                        <input type="text" name="emergency_contact_phone" value="{{ old('emergency_contact_phone', $employee->emergency_contact_phone) }}" maxlength="11"
                                class="w-full rounded-xl py-3 px-4 transition-all @error('emergency_contact_phone') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm">
                         @error('emergency_contact_phone') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                     </div>

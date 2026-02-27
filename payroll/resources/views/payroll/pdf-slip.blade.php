@@ -4,7 +4,12 @@
     <meta charset="utf-8">
     <title>Payslip - {{ $item->employee->last_name }}</title>
     <style>
-        /* PDF-Compatible Utility Classes (Tailwind Style) */
+
+        @page { 
+            size: A4 portrait; 
+            margin: 0.5in 0.5in 1in 0.5in; /* Top, Right, Bottom, Left */
+        }
+        
         body { font-family: 'Helvetica', sans-serif; color: #1f2937; margin: 0; padding: 0; background-color: #fff; }
         .mx-auto { margin-left: auto; margin-right: auto; }
         .w-full { width: 100%; }
@@ -13,7 +18,6 @@
         .font-bold { font-weight: bold; }
         .uppercase { text-transform: uppercase; }
         
-        /* The "Centralizer" Container */
         .container { 
             width: 6.5in; 
             margin: 0.5in auto; 
@@ -21,15 +25,18 @@
             border: 1px solid #d1d5db; 
         }
         
-        .header { text-align: center; border-bottom: 3px solid #0d9488; padding-bottom: 15px; margin-bottom: 25px; }
+        /* UPDATED HEADER FOR LOGO */
+        .header { border-bottom: 3px solid #0d9488; padding-bottom: 15px; margin-bottom: 25px; overflow: hidden; }
+        .header-logo { float: left; width: 70px; height: 70px; background-color: #fff; border-radius: 50%; }
+        .header-text { margin-left: 85px; text-align: left; padding-top: 10px; }
         .company-name { font-size: 22px; color: #0d9488; margin: 0; text-transform: uppercase; font-weight: bold; }
+        .payslip-title { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 2px; margin-top: 2px; }
 
         .info-grid { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         .info-grid td { padding: 4px 0; font-size: 11px; }
         .label { font-weight: bold; color: #4b5563; width: 100px; }
         .value { color: #111827; border-bottom: 1px solid #e5e7eb; }
 
-        /* The fix for Peso Symbol (?) */
         .peso { font-family: 'DejaVu Sans', sans-serif; }
 
         .section-title { background: #f9fafb; padding: 8px 12px; font-weight: bold; font-size: 11px; margin-top: 20px; color: #0d9488; border: 1px solid #e5e7eb; border-left: 5px solid #0d9488; text-transform: uppercase; }
@@ -50,8 +57,11 @@
 
 <div class="container mx-auto">
     <div class="header">
-        <h1 class="company-name">SDSC PAYROLL SYSTEM</h1>
-        <br>
+        <img src="{{ public_path('images/sdsc_logo.jpg') }}" class="header-logo">
+        <div class="header-text">
+            <h1 class="company-name">SDSC Payroll System</h1>
+            <div class="payslip-title">Official Employee Payslip</div>
+        </div>
     </div>
 
     <table class="info-grid">
@@ -74,11 +84,27 @@
     <div class="section-title">Earnings & Allowances</div>
     <table class="main-table">
         <tr>
-            <td>Basic Pay (Adjusted for Absences)</td>
-            <td class="text-right peso">₱{{ number_format($item->basic_pay, 2) }}</td>
+            <th style="width: 50%;">Description</th>
+            <th style="width: 20%; text-align: center;">Total Hrs</th>
+            <th style="width: 30%; text-align: right;">Amount</th>
         </tr>
         <tr>
+            <td>Basic Salary</td>
+            <td style="text-align: center; font-weight: bold; color: #374151;">{{ $details->total_hours ?? 0 }}</td>
+            <td class="text-right peso">₱{{ number_format($details->gross_basic ?? $item->basic_pay, 2) }}</td>
+        </tr>
+        
+        @if($item->employee->salary_type !== 'Hourly' && ($details->absences ?? 0) > 0)
+        <tr>
+            <td style="color: #dc2626; font-style: italic;">Less: Absences</td>
+            <td style="text-align: center; color: #dc2626; font-weight: bold;">{{ $details->absences }} days</td>
+            <td class="text-right peso" style="color: #dc2626;">-₱{{ number_format($details->absence_deduction ?? 0, 2) }}</td>
+        </tr>
+        @endif
+
+        <tr>
             <td>Additions (Allowances/Incentives)</td>
+            <td style="text-align: center; color: #9ca3af;">-</td>
             <td class="text-right peso" style="color: #059669; font-weight: bold;">₱{{ number_format($item->additions, 2) }}</td>
         </tr>
     </table>
@@ -86,16 +112,24 @@
     <div class="section-title">Mandatory Deductions</div>
     <table class="main-table">
         <tr>
-            <td>SSS Contribution</td>
-            <td class="text-right peso" style="color: #dc2626;">-₱{{ number_format($details->sss, 2) }}</td>
+            <th colspan="2">Deduction Type</th>
+            <th style="text-align: right;">Amount</th>
         </tr>
         <tr>
-            <td>PhilHealth</td>
-            <td class="text-right peso" style="color: #dc2626;">-₱{{ number_format($details->philhealth, 2) }}</td>
+            <td colspan="2">SSS Contribution</td>
+            <td class="text-right peso" style="color: #dc2626;">-₱{{ number_format($details->sss ?? 0, 2) }}</td>
         </tr>
         <tr>
-            <td>Pag-IBIG</td>
-            <td class="text-right peso" style="color: #dc2626;">-₱{{ number_format($details->pagibig, 2) }}</td>
+            <td colspan="2">PhilHealth</td>
+            <td class="text-right peso" style="color: #dc2626;">-₱{{ number_format($details->philhealth ?? 0, 2) }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">Pag-IBIG</td>
+            <td class="text-right peso" style="color: #dc2626;">-₱{{ number_format($details->pagibig ?? 0, 2) }}</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="font-weight: bold;">Withholding Tax (WHT)</td>
+            <td class="text-right peso" style="color: #dc2626; font-weight: bold;">-₱{{ number_format($details->tax ?? 0, 2) }}</td>
         </tr>
     </table>
 

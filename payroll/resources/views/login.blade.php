@@ -10,9 +10,9 @@
 
     <div class="login-card">
         <div class="flex justify-center mb-6">
-            <div class="h-16 w-16 bg-slate-50 rounded-full flex items-center justify-center text-3xl border border-slate-100 shadow-inner">
-                🎓
-            </div>
+            <img src="{{ asset('images/sdsc_logo.jpg') }}" 
+                 alt="SDSC Logo" 
+                 class="h-20 w-20 rounded-full bg-white p-1 shadow-sm object-contain border border-slate-100">
         </div>
 
         <h2 class="login-title">SDSC Payroll</h2>
@@ -23,7 +23,7 @@
             
             <div class="form-group">
                 <label class="input-label">Email Address</label>
-                <input type="email" name="email" class="form-input" placeholder="@sdsc.edu.ph" required>
+                <input type="email" name="email" class="form-input" placeholder="@sdsc.edu.ph" required autofocus>
                 @error('email')
                     <span class="error-msg">⚠ {{ $message }}</span>
                 @enderror
@@ -38,8 +38,6 @@
                 Sign In Securely
             </button>
         </form>
-        
-
     </div>
 
 </body>

@@ -22,7 +22,7 @@
         </button>
 
         <div x-show="open" 
-            x-cloak
+             x-cloak
              @click.away="open = false" 
              class="dropdown-card"
              x-transition>
@@ -109,26 +109,35 @@
         <div class="lg:col-span-2 table-container">
             <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                 <h3 class="font-bold text-slate-700">Recent Payroll Batches</h3>
+                <a href="{{ route('payroll.history') }}" class="text-xs font-bold text-teal-600 hover:text-teal-800 transition-colors">View All →</a>
             </div>
             <table class="w-full text-left">
                 <thead class="table-head">
                     <tr>
                         <th class="px-6 py-4">Batch ID</th>
                         <th class="px-6 py-4">Period</th>
+                        <th class="px-6 py-4">Total</th>
                         <th class="px-6 py-4">Status</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="table-cell font-mono font-bold text-[#003366]">#PY-2026-02</td>
-                        <td class="table-cell">Jan 01 - Jan 15</td>
+                    @php
+                        // Fetch the latest 5 batches directly
+                        $recentBatches = \App\Models\PayrollBatch::latest()->take(5)->get();
+                    @endphp
+
+                    @forelse($recentBatches as $batch)
+                    <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="window.location='{{ route('payroll.show', $batch->id) }}'">
+                        <td class="table-cell font-mono font-bold text-[#003366]">{{ $batch->batch_id }}</td>
+                        <td class="table-cell">{{ date('M d', strtotime($batch->period_start)) }} - {{ date('M d', strtotime($batch->period_end)) }}</td>
+                        <td class="table-cell font-bold text-slate-600">₱{{ number_format($batch->total_net, 2) }}</td>
                         <td class="table-cell"><span class="stat-badge-green">Completed</span></td>
                     </tr>
-                    <tr class="hover:bg-slate-50 transition">
-                        <td class="table-cell font-mono font-bold text-[#003366]">#PY-2026-01</td>
-                        <td class="table-cell">Dec 16 - Dec 31</td>
-                        <td class="table-cell"><span class="stat-badge-green">Completed</span></td>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center text-slate-400 text-sm">No payroll batches processed yet.</td>
                     </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -140,12 +149,12 @@
                     <span></span> Add Employee
                 </a>
                 
-                <button class="btn-secondary w-full">
+                <a href="{{ route('payroll.history') }}" class="btn-secondary w-full flex items-center justify-center gap-2 bg-white border border-slate-300 text-slate-700 font-bold py-2 rounded-xl hover:bg-slate-50 transition shadow-sm">
                     <span></span> Generate Slip
-                </button>
+                </a>
                 
                 @if(Auth::user()->role === 'super_admin')
-                <a href="{{ route('settings.index') }}" class="btn-secondary w-full flex items-center justify-center gap-2">
+                <a href="{{ route('settings.index') }}" class="btn-secondary w-full flex items-center justify-center gap-2 bg-white border border-slate-300 text-slate-700 font-bold py-2 rounded-xl hover:bg-slate-50 transition shadow-sm">
                     <span></span> Settings
                 </a>
                 @endif

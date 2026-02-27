@@ -43,15 +43,17 @@ Route::middleware('auth')->group(function () {
     // Attendance Route
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+    Route::post('/attendance/import', [App\Http\Controllers\AttendanceController::class, 'import'])->name('attendance.import');
 
     // Payroll Route
     Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');
     Route::post('/payroll/store', [PayrollController::class, 'store'])->name('payroll.store');
     Route::get('/payroll/history', [PayrollController::class, 'history'])->name('payroll.history');
     Route::get('/payroll/batch/{id}', [PayrollController::class, 'show'])->name('payroll.show');
+    Route::get('/payroll/finalize/{id}', [PayrollController::class, 'finalize'])->name('payroll.finalize');
     Route::get('/payroll/download-slip/{id}', [PayrollController::class, 'downloadSlip'])->name('payroll.download-slip');
-    Route::get('/payroll/batch/{id}/print-all', [App\Http\Controllers\PayrollController::class, 'printBatch'])->name('payroll.print-batch');
-    
+    Route::get('/payroll/print-batch/{id}', [PayrollController::class, 'printBatch'])->name('payroll.pdf');
+
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

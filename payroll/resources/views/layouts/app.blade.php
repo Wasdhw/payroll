@@ -9,27 +9,34 @@
 <body class="bg-slate-100 font-sans antialiased">
 
     <div class="flex h-screen overflow-hidden">
-        <aside class="sidebar">
-            <div class="logo-container">
-                <h1 class="logo-text">SDSC</h1>
-                <p class="logo-subtext">Payroll System</p>
-            </div>
+        
+    <aside class="sidebar h-full flex-shrink-0" style="min-width: 260px;">
+    
+    <div class="logo-container flex flex-row items-center gap-3 px-8 py-2">
+        
+        <img src="{{ asset('images/sdsc_logo.jpg') }}" 
+             alt="SDSC Logo" 
+             class="h-15 w-15 rounded-full shadow-2xl object-contain shrink-0">
+        
+        <div class="flex flex-col text-left">
+            <h1 class="logo-text text-3xl font-bold leading-none text-white">SDSC</h1>
+            <p class="logo-subtext text-[9px] uppercase tracking-wider text-teal-100 opacity-80 mt-1">Payroll System</p>
+        </div>
+    </div>
 
-            <nav class="nav-menu">
-                <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'nav-link-active' : 'nav-link' }}">Dashboard</a>
-                <a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.index') ? 'nav-link-active' : 'nav-link' }}">Employees</a>
-                <a href="{{ route('attendance.index') }}" class="{{ request()->routeIs('attendance.index') ? 'nav-link-active' : 'nav-link' }}">Attendance</a>
-                <a href="{{ route('payroll.index') }}" class="{{ request()->routeIs('payroll.index') ? 'nav-link-active' : 'nav-link' }}">Process</a>
-                <a href="{{ route('payroll.history') }}" class="{{ request()->routeIs('payroll.history') ? 'nav-link-active' : 'nav-link' }}">History</a>
-
-
-            </nav>
-
-        </aside>
+    <nav class="nav-menu px-2">
+        <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'nav-link-active' : 'nav-link' }}">Dashboard</a>
+        <a href="{{ route('employees.index') }}" class="{{ request()->routeIs('employees.index') ? 'nav-link-active' : 'nav-link' }}">Employees</a>
+        <a href="{{ route('attendance.index') }}" class="{{ request()->routeIs('attendance.index') ? 'nav-link-active' : 'nav-link' }}">Attendance</a>
+        <a href="{{ route('payroll.index') }}" class="{{ request()->routeIs('payroll.index') ? 'nav-link-active' : 'nav-link' }}">Process</a>
+        <a href="{{ route('payroll.history') }}" class="{{ request()->routeIs('payroll.history') ? 'nav-link-active' : 'nav-link' }}">History</a>
+    </nav>
+    </aside>
 
         <main class="flex-1 overflow-y-auto bg-slate-50">
             @yield('content')
         </main>
+
     </div>
 
 </body>

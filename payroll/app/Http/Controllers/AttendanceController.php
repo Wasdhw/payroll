@@ -10,25 +10,47 @@ class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Get the selected date from the URL (defaults to today if no date is clicked)
         $selectedDate = $request->query('date', date('Y-m-d'));
+        $search = $request->query('search'); 
+        
+        $month = date('m', strtotime($selectedDate));
+        $year = date('Y', strtotime($selectedDate));
 
-        // 2. Fetch employees and ONLY load their attendance for the chosen date
-        $employees = Employee::with(['attendances' => function($query) use ($selectedDate) {
-            $query->where('attendance_date', $selectedDate);
-        }])->latest()->get();
 
-        // 3. Fetch logs for the current month being viewed (to power the green dots)
-        $loggedDates = Attendance::whereMonth('attendance_date', date('m', strtotime($selectedDate)))
-            ->whereYear('attendance_date', date('Y', strtotime($selectedDate)))
+        $query = Employee::query();
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('employee_id', 'like', "%{$search}%");
+            });
+        }
+
+        $query->where(function($q) use ($month, $year) {
+            $q->where('status', '!=', 'Resigned') 
+              ->orWhereHas('attendances', function($subQuery) use ($month, $year) {
+                  $subQuery->whereMonth('attendance_date', $month)
+                           ->whereYear('attendance_date', $year);
+              });
+        });
+
+        $employees = $query->with(['attendances' => function($q) use ($month, $year) {
+                $q->whereMonth('attendance_date', $month)
+                  ->whereYear('attendance_date', $year);
+            }])
+            ->latest()
+            ->get();
+
+        $loggedDates = Attendance::whereMonth('attendance_date', $month)
+            ->whereYear('attendance_date', $year)
             ->get()
             ->pluck('attendance_date')
-            ->map(fn($date) => date('Y-m-d', strtotime($date))) // Format cleanly
+            ->map(fn($date) => date('Y-m-d', strtotime($date))) 
             ->unique()
             ->toArray();
 
-        // Pass all variables to the view
-        return view('attendance', compact('employees', 'loggedDates', 'selectedDate'));
+        return view('attendance', compact('employees', 'loggedDates', 'selectedDate', 'search'));
     }
 
     public function store(Request $request)
@@ -37,6 +59,7 @@ class AttendanceController extends Controller
             'employee_id' => 'required|exists:employees,id',
             'attendance_date' => 'required|date',
             'status' => 'required|string',
+            'hours_worked' => 'nullable|numeric|min:0|max:24', 
             'overtime_hours' => 'nullable|numeric|min:0',
             'allowance' => 'nullable|numeric|min:0',
             'incentive' => 'nullable|numeric|min:0',
@@ -49,14 +72,69 @@ class AttendanceController extends Controller
             ],
             [
                 'status' => $validated['status'],
+                'hours_worked' => $validated['hours_worked'] ?? ($validated['status'] === 'Present' ? 8 : 0), 
                 'overtime_hours' => $validated['overtime_hours'] ?? 0,
                 'allowance' => $validated['allowance'] ?? 0,
                 'incentive' => $validated['incentive'] ?? 0,
             ]
         );
 
-        // SMART REDIRECT: Redirect back to the exact date they just logged!
         return redirect()->route('attendance.index', ['date' => $validated['attendance_date']])
                          ->with('success', 'Attendance logged successfully!');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'biometric_file' => 'required|mimes:csv,txt|max:2048',
+        ]);
+
+        $file = $request->file('biometric_file');
+        $handle = fopen($file->getPathname(), "r");
+        
+        $header = true;
+        $successCount = 0;
+
+        while (($row = fgetcsv($handle, 1000, ",")) !== FALSE) {
+            if ($header) {
+                $header = false; 
+                continue;
+            }
+
+            // 0: Employee ID 
+            // 1: Date 
+            // 2: Status 
+            // 3: Hours Worked 
+            // 4: Overtime Hours 
+
+            $empIdString = $row[0] ?? null;
+            $date = $row[1] ?? null;
+            $status = $row[2] ?? 'Present';
+            $hoursWorked = $row[3] ?? ($status === 'Present' ? 8 : 0);
+            $overtime = $row[4] ?? 0;
+
+            if (!$empIdString || !$date) continue; 
+
+            $employee = \App\Models\Employee::where('employee_id', $empIdString)->first();
+
+            if ($employee) {
+                \App\Models\Attendance::updateOrCreate(
+                    [
+                        'employee_id' => $employee->id,
+                        'attendance_date' => date('Y-m-d', strtotime($date)),
+                    ],
+                    [
+                        'status' => ucfirst($status),
+                        'hours_worked' => is_numeric($hoursWorked) ? $hoursWorked : 0, 
+                        'overtime_hours' => is_numeric($overtime) ? $overtime : 0,
+                    ]
+                );
+                $successCount++;
+            }
+        }
+
+        fclose($handle);
+
+        return back()->with('success', "Biometrics imported successfully! {$successCount} records updated.");
     }
 }

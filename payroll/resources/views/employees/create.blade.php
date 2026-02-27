@@ -98,7 +98,7 @@
                         <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">
                             Contact Number <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" name="phone" value="{{ old('phone') }}"
+                        <input type="text" name="phone" value="{{ old('phone') }}" maxlength="11"
                                class="w-full rounded-xl py-3 px-4 transition-all @error('phone') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm">
                         @error('phone') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                     </div>
@@ -121,7 +121,7 @@
 
                     <div class="md:col-span-1">
                         <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">Emergency Number</label>
-                        <input type="text" name="emergency_contact_phone" value="{{ old('emergency_contact_phone') }}"
+                        <input type="text" name="emergency_contact_phone" value="{{ old('emergency_contact_phone') }}" maxlength="11"
                                class="w-full rounded-xl py-3 px-4 transition-all @error('emergency_contact_phone') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm">
                         @error('emergency_contact_phone') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                     </div>

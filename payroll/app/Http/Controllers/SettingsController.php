@@ -35,7 +35,6 @@ public function store(Request $request)
         'password' => ['required', 'min:8', 'confirmed'],
     ]);
 
-    // Force the role to be 'hr_admin' so they can't create another Super Admin
     User::create([
         'name' => $validated['name'],
         'email' => $validated['email'],
@@ -46,14 +45,12 @@ public function store(Request $request)
     return back()->with('success', 'New HR Admin registered successfully!');
 }
 
-    // 3. Show the Edit Form for a specific user
     public function edit($id)
     {
         $user = User::findOrFail($id);
         return view('settings.edit', compact('user'));
     }
 
-    // 4. Update an existing user's Email or Password
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
@@ -61,13 +58,12 @@ public function store(Request $request)
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'password' => ['nullable', 'min:8', 'confirmed'], // Password is optional here
+            'password' => ['nullable', 'min:8', 'confirmed'], 
         ]);
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
 
-        // Only update password if they typed something new
         if ($request->filled('password')) {
             $user->password = Hash::make($validated['password']);
         }
@@ -77,7 +73,6 @@ public function store(Request $request)
         return redirect()->route('settings.index')->with('success', 'User account updated!');
     }
 
-    // 5. Delete a user
     public function destroy($id)
     {
         User::destroy($id);
