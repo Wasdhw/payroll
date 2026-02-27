@@ -15,6 +15,8 @@ class PayrollController extends Controller
 {
     public function index(Request $request)
     {
+        $this->autoProcessPreviousPeriod();
+
         $filter = $request->query('filter', 'all');
         $search = $request->query('search');
 
@@ -47,7 +49,6 @@ class PayrollController extends Controller
         $employees = $query->get();
 
         $payrollRecords = $employees->map(function ($employee) use ($startDate, $endDate) {
-            // PASS FALSE: During preview, do not count missing logs as absent
             return $this->calculatePayroll($employee, $startDate, $endDate, false);
         });
 
@@ -64,53 +65,9 @@ class PayrollController extends Controller
             return back()->with('error', 'Payroll for this period has already been saved.');
         }
 
-        return DB::transaction(function () use ($startDate, $endDate) {
-            $batch = PayrollBatch::create([
-                'batch_id' => 'PY-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(2))),
-                'period_start' => $startDate,
-                'period_end' => $endDate,
-                'total_gross' => 0,
-                'total_net' => 0,
-                'status' => 'Pending',
-                'processed_by' => auth()->user()->name ?? 'System Admin',
-            ]);
+        $this->generateBatch($startDate, $endDate, auth()->user()->name ?? 'System Admin');
 
-            $batchGross = 0; 
-            $batchNet = 0;
-            $employees = Employee::all();
-
-            foreach ($employees as $employee) {
-                // PASS TRUE: When saving the batch, strictly check and enforce absences
-                $calc = $this->calculatePayroll($employee, $startDate, $endDate, true);
-                
-                PayrollItem::create([
-                    'payroll_batch_id' => $batch->id,
-                    'employee_id' => $employee->id,
-                    'basic_pay' => $calc->net_basic,
-                    'additions' => $calc->additions,
-                    'deductions' => $calc->total_deductions,
-                    'net_pay' => $calc->net_pay,
-                    'is_paid' => false,
-                    'details' => json_encode([
-                        'sss' => $calc->sss,
-                        'philhealth' => $calc->philhealth,
-                        'pagibig' => $calc->pagibig,
-                        'tax' => $calc->tax,
-                        'absences' => $calc->days_absent,
-                        'absence_deduction' => $calc->absence_deduction, 
-                        'gross_basic' => $calc->gross_basic,             
-                        'total_hours' => $calc->total_hours              
-                    ])
-                ]);
-
-                $batchGross += $calc->gross_pay;
-                $batchNet += $calc->net_pay;
-            }
-
-            $batch->update(['total_gross' => $batchGross, 'total_net' => $batchNet]);
-
-            return redirect()->route('payroll.history')->with('success', "Batch {$batch->batch_id} saved successfully.");
-        });
+        return redirect()->route('payroll.history')->with('success', "Batch saved successfully.");
     }
 
     public function show($id)
@@ -174,13 +131,81 @@ class PayrollController extends Controller
         return view('payroll.history', compact('batches'));
     }
 
-    /**
-     * @param Employee $employee
-     * @param string $start
-     * @param string $end
-     * @param bool $isSavingBatch Flag to trigger strict absent checking
-     */
-    private function calculatePayroll($employee, $start = null, $end = null, $isSavingBatch = false) {
+    // ==========================================
+    // HELPER METHODS
+    // ==========================================
+
+    private function autoProcessPreviousPeriod()
+    {
+        $today = Carbon::today();
+        
+        if ($today->day <= 15) {
+            $prevStart = $today->copy()->subMonth()->startOfMonth()->addDays(15); 
+            $prevEnd = $today->copy()->subMonth()->endOfMonth(); 
+        } else {
+            $prevStart = $today->copy()->startOfMonth(); 
+            $prevEnd = $today->copy()->startOfMonth()->addDays(14); 
+        }
+
+        $exists = PayrollBatch::where('period_start', $prevStart->format('Y-m-d'))
+                              ->where('period_end', $prevEnd->format('Y-m-d'))
+                              ->exists();
+
+        if (!$exists) {
+            $this->generateBatch($prevStart->format('Y-m-d'), $prevEnd->format('Y-m-d'), 'System Auto');
+        }
+    }
+
+    private function generateBatch($startDate, $endDate, $processedBy)
+    {
+        DB::transaction(function () use ($startDate, $endDate, $processedBy) {
+            $batch = PayrollBatch::create([
+                'batch_id' => 'PY-' . date('Ymd', strtotime($endDate)) . '-' . strtoupper(bin2hex(random_bytes(2))),
+                'period_start' => $startDate,
+                'period_end' => $endDate,
+                'total_gross' => 0,
+                'total_net' => 0,
+                'status' => 'Pending',
+                'processed_by' => $processedBy,
+            ]);
+
+            $batchGross = 0; 
+            $batchNet = 0;
+            $employees = Employee::all();
+
+            foreach ($employees as $employee) {
+
+                $calc = $this->calculatePayroll($employee, $startDate, $endDate, true);
+                
+                PayrollItem::create([
+                    'payroll_batch_id' => $batch->id,
+                    'employee_id' => $employee->id,
+                    'basic_pay' => $calc->net_basic,
+                    'additions' => $calc->additions,
+                    'deductions' => $calc->total_deductions,
+                    'net_pay' => $calc->net_pay,
+                    'is_paid' => false,
+                    'details' => json_encode([
+                        'sss' => $calc->sss,
+                        'philhealth' => $calc->philhealth,
+                        'pagibig' => $calc->pagibig,
+                        'tax' => $calc->tax,
+                        'absences' => $calc->days_absent,
+                        'absence_deduction' => $calc->absence_deduction, 
+                        'gross_basic' => $calc->gross_basic,             
+                        'total_hours' => $calc->total_hours              
+                    ])
+                ]);
+
+                $batchGross += $calc->gross_pay;
+                $batchNet += $calc->net_pay;
+            }
+
+            $batch->update(['total_gross' => $batchGross, 'total_net' => $batchNet]);
+        });
+    }
+
+private function calculatePayroll($employee, $start = null, $end = null, $isSavingBatch = false) {
         $startDate = Carbon::parse($start);
         $endDate = Carbon::parse($end);
 
@@ -193,20 +218,21 @@ class PayrollController extends Controller
         $totalHours = 0;
         $totalAdditions = 0;
 
-        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+        $checkUntil = $endDate->isFuture() ? Carbon::today() : $endDate;
+
+        for ($date = $startDate->copy(); $date->lte($checkUntil); $date->addDay()) {
             
-            if ($date->isWeekend()) { 
+            if ($date->isSunday()) { 
                 continue; 
             }
 
             $log = $attendances->firstWhere('attendance_date', $date->format('Y-m-d'));
 
             if (!$log) {
-                // If we are officially saving the batch, empty days become ABSENT
+
                 if ($isSavingBatch) {
                     $daysAbsent++; 
                     
-                    // Auto-fill the database so the Attendance page reflects the absence
                     Attendance::firstOrCreate([
                         'employee_id' => $employee->id,
                         'attendance_date' => $date->format('Y-m-d')
@@ -237,23 +263,22 @@ class PayrollController extends Controller
             $netBasic = $grossBasic;
         } else {
             $grossBasic = $employee->salary / 2; 
-            $dailyRate = $employee->salary / 22; 
+            $dailyRate = $employee->salary / 26; 
             $absenceDeduction = $daysAbsent * $dailyRate;
             $netBasic = max(0, $grossBasic - $absenceDeduction);
         }
         
         $grossPay = $netBasic + $totalAdditions;
 
-        // Mandatory Deductions
+        // Deductions
         $sss = ($employee->salary * 0.045) / 2; 
-        $philhealth = ($employee->salary * 0.025) / 2;
+        $philhealth = ($employee->salary * 0.02) / 2;
         $pagibig = 100.00; 
         $mandatoryDeductions = $sss + $philhealth + $pagibig;
         
         $taxableIncome = max(0, $grossPay - $mandatoryDeductions);
         $tax = 0;
 
-        // 2026 Withholding Tax 
         if ($taxableIncome > 333333) { $tax = 91770.70 + (($taxableIncome - 333333) * 0.35); } 
         elseif ($taxableIncome > 83333) { $tax = 16770.70 + (($taxableIncome - 83333) * 0.30); } 
         elseif ($taxableIncome > 33333) { $tax = 4270.70 + (($taxableIncome - 33333) * 0.25); } 
