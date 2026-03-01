@@ -12,9 +12,11 @@
         @if(!$isProcessed)
             <form action="{{ route('payroll.store') }}" method="POST" onsubmit="return confirm('Freeze these numbers and save the batch? You cannot undo this action.')">
                 @csrf
+                @if(Auth::user()->role === 'super_admin')
                 <button type="submit" class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-6 rounded-xl text-sm transition-all shadow-md flex items-center gap-2">
                     <span></span> Save Batch
                 </button>
+                @endif
             </form>
         @else
             <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-2 rounded-xl text-xs font-bold shadow-sm flex items-center gap-2">

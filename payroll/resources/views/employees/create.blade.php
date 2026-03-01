@@ -1,13 +1,40 @@
 @extends('layouts.app')
 
 @section('content')
+{{-- Include Alpine.js --}}
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
 <div class="max-w-6xl mx-auto py-12 px-6">
     
     <div class="mb-10">
         <h2 class="text-3xl font-bold text-slate-800 tracking-tight">Add New Employee</h2>
     </div>
 
-    <form action="{{ route('employees.store') }}" method="POST">
+    {{-- Form with Alpine.js data binding --}}
+    <form action="{{ route('employees.store') }}" method="POST"
+        x-data="{
+            employmentType: '{{ old('employment_type') }}',
+            workSchedule: '{{ old('work_schedule') }}',
+            salaryType: '{{ old('salary_type') }}',
+            
+            // Logic to update and disable fields based on Employment Type
+            updateDefaults() {
+                if (this.employmentType === 'Regular') {
+                    this.workSchedule = 'Daily';
+                    this.salaryType = 'Monthly';
+                }
+            },
+            
+            // Logic to handle Salary Type dependency on Work Schedule
+            updateSalaryType() {
+                if (this.workSchedule === 'Hourly') {
+                    this.salaryType = 'Hourly';
+                }
+            },
+            get isHourlySchedule() {
+                return this.workSchedule === 'Hourly';
+            }
+        }">
         @csrf
         
         <div class="grid gap-10">
@@ -56,7 +83,7 @@
                             Date of Birth <span class="text-red-500">*</span>
                         </label>
                         <input type="date" name="birth_date" value="{{ old('birth_date') }}"
-                               class="w-full rounded-xl py-3 px-4 transition-all @error('birth_date') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm">
+                               class="w-full rounded-xl py-3 px-4 transition-all @error('birth_date') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm""form-control" required>
                         @error('birth_date') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                     </div>
 
@@ -161,9 +188,12 @@
                         <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">
                             Employment Type <span class="text-red-500">*</span>
                         </label>
-                        <select name="employment_type" class="w-full rounded-xl py-3 px-4 bg-white transition-all @error('employment_type') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm">
+                        <select name="employment_type" 
+                                x-model="employmentType"
+                                @change="updateDefaults"
+                                class="w-full rounded-xl py-3 px-4 bg-white transition-all @error('employment_type') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm">
                             <option value="">Select Type</option>
-                            <option value="Permanent" {{ old('employment_type') == 'Permanent' ? 'selected' : '' }}>Permanent</option>
+                            <option value="Regular" {{ old('employment_type') == 'Regular' ? 'selected' : '' }}>Regular</option>
                             <option value="Contractual" {{ old('employment_type') == 'Contractual' ? 'selected' : '' }}>Contractual</option>
                             <option value="Part-Time" {{ old('employment_type') == 'Part-Time' ? 'selected' : '' }}>Part-Time</option>
                         </select>
@@ -175,7 +205,7 @@
                             Date Hired <span class="text-red-500">*</span>
                         </label>
                         <input type="date" name="join_date" value="{{ old('join_date') }}"
-                               class="w-full rounded-xl py-3 px-4 transition-all @error('join_date') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm">
+                               class="w-full rounded-xl py-3 px-4 transition-all @error('join_date') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm" "form-control" required>
                         @error('join_date') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                     </div>
 
@@ -183,7 +213,10 @@
                         <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">
                             Work Schedule <span class="text-red-500">*</span>
                         </label>
-                        <select name="work_schedule" class="w-full rounded-xl py-3 px-4 bg-white transition-all @error('work_schedule') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm">
+                        <select name="work_schedule" 
+                                x-model="workSchedule" 
+                                @change="updateSalaryType"
+                                class="w-full rounded-xl py-3 px-4 bg-white transition-all @error('work_schedule') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm">
                             <option value="">Select Schedule</option>
                             <option value="Daily" {{ old('work_schedule') == 'Daily' ? 'selected' : '' }}>Daily</option>
                             <option value="Hourly" {{ old('work_schedule') == 'Hourly' ? 'selected' : '' }}>Hourly</option>
@@ -207,10 +240,13 @@
                         <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">
                             Salary Type <span class="text-red-500">*</span>
                         </label>
-                        <select name="salary_type" class="w-full rounded-xl py-3 px-4 bg-white transition-all @error('salary_type') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm">
-                            <option value="Monthly" {{ old('salary_type') == 'Monthly' ? 'selected' : '' }}>Monthly Fixed</option>
-                            <option value="Daily" {{ old('salary_type') == 'Daily' ? 'selected' : '' }}>Daily Rate</option>
-                            <option value="Hourly" {{ old('salary_type') == 'Hourly' ? 'selected' : '' }}>Hourly Rate</option>
+                        <select name="salary_type" 
+                                x-model="salaryType"
+                                :disabled="isHourlySchedule"
+                                class="w-full rounded-xl py-3 px-4 bg-white transition-all @error('salary_type') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm disabled:bg-slate-100 disabled:cursor-not-allowed">
+                            <option value="Monthly" :selected="salaryType === 'Monthly'">Monthly Fixed</option>
+                            <option value="Daily" :selected="salaryType === 'Daily'">Daily Rate</option>
+                            <option value="Hourly" :selected="salaryType === 'Hourly'">Hourly Rate</option>
                         </select>
                         @error('salary_type') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                     </div>
@@ -230,7 +266,6 @@
                                class="w-full rounded-xl py-3 px-4 transition-all @error('supervisor') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm">
                         @error('supervisor') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                     </div>
-
                 </div>
             </div>
 
@@ -245,7 +280,6 @@
                     Save Employee Record
                 </button>
             </div>
-
         </div>
     </form>
 </div>

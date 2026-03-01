@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller
 {
@@ -58,7 +59,7 @@ class EmployeeController extends Controller
             'first_name'              => 'required|string',
             'middle_name'             => 'nullable|string',
             'last_name'               => 'required|string',
-            'birth_date'              => 'required|date',
+            'birth_date'              => 'required|date_format:Y-m-d',
             'gender'                  => 'required',
             'civil_status'            => 'required',
             'address'                 => 'required',
@@ -66,11 +67,11 @@ class EmployeeController extends Controller
             'email'                   => 'required|email|unique:employees,email,' . $employee->id,
             'department'              => 'required',
             'job_title'               => 'required',
-            'employment_type'         => 'required',
-            'join_date'               => 'required|date',
-            'work_schedule'           => 'required',
+            'employment_type'         => ['required', Rule::in(['Regular', 'Probationary', 'Contractual', 'Part-Time'])],            
+            'join_date'               => 'required|date_format:Y-m-d',
+            'work_schedule'           => ['required', Rule::in(['Daily', 'Hourly'])],            
             'salary'                  => 'required|numeric',
-            'salary_type'             => 'required|string',
+            'salary_type'             => ['required', Rule::in(['Monthly', 'Daily', 'Hourly'])],
             'status'                  => 'required',
             'emergency_contact_name'  => 'required|string',
             'emergency_contact_phone' => 'required|digits:11',
@@ -93,7 +94,7 @@ class EmployeeController extends Controller
             'first_name'              => 'required|string',
             'middle_name'             => 'nullable|string',
             'last_name'               => 'required|string',
-            'birth_date'              => 'required|date',
+            'birth_date'              => 'required|date_format:Y-m-d',
             'gender'                  => 'required',
             'civil_status'            => 'required',
             'address'                 => 'required',
@@ -101,11 +102,11 @@ class EmployeeController extends Controller
             'email'                   => 'required|email|unique:employees',
             'department'              => 'required',
             'job_title'               => 'required',
-            'employment_type'         => 'required',
-            'join_date'               => 'required|date',
-            'work_schedule'           => 'required',
+            'employment_type'         => ['required', Rule::in(['Regular', 'Probationary', 'Contractual', 'Part-Time'])],
+            'join_date'               => 'required|date_format:Y-m-d',
+            'work_schedule'           => ['required', Rule::in(['Daily', 'Hourly'])],
             'salary'                  => 'required|numeric',
-            'salary_type'             => 'required|string',
+            'salary_type'             => ['required', Rule::in(['Monthly', 'Daily', 'Hourly'])],
             'status'                  => 'required',
             'emergency_contact_name'  => 'required|string',
             'emergency_contact_phone' => 'required|digits:11',
