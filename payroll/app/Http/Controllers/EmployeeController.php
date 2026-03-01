@@ -32,6 +32,12 @@ class EmployeeController extends Controller
 
         return view('employees.index', compact('employees', 'search', 'status'));
     }
+    public function show($id)
+    {
+        $employee = \App\Models\Employee::findOrFail($id);
+
+        return view('employees.show', compact('employee'));
+    }
 
     public function create()
     {

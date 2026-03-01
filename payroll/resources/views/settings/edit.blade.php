@@ -27,8 +27,7 @@
                 <div class="border-t border-slate-100 my-4"></div>
                 
                 <div>
-                    <label class="block text-xs font-bold text-teal-600 uppercase mb-1">Change Password (Optional)</label>
-                    <p class="text-xs text-slate-400 mb-2"> Leave blank if you don't want to change it.</p>
+                    <label class="block text-xs font-bold text-teal-600 uppercase mb-1">Change Password</label>
                     <br>
                     <input type="password" name="password" placeholder="New Password" class="w-full rounded-lg border-slate-300 text-base py-2 px-3 focus:ring-teal-500 focus:border-teal-500 mb-2">
                     <br>

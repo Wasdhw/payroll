@@ -7,7 +7,7 @@
 
         @page { 
             size: A4 portrait; 
-            margin: 0.5in 0.5in 1in 0.5in; /* Top, Right, Bottom, Left */
+            margin: 0in 0.5in 0.5in 0.5in; /* Top, Right, Bottom, Left */
         }
         
         body { font-family: 'Helvetica', sans-serif; color: #1f2937; margin: 0; padding: 0; background-color: #fff; }

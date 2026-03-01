@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store'); 
     Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
     Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+    Route::get('/employees/{employee}', [EmployeeController::class, 'show'])->name('employees.show');
 
     // Attendance Route
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');

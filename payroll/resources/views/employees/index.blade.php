@@ -7,9 +7,13 @@
         <div>
             <h2 class="text-3xl font-bold text-slate-800 py-2 px-2">Employee Management</h2>
         </div>
-        <a href="{{ route('employees.create') }}" class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-6 rounded-xl shadow-md transition flex items-center gap-2">
-            <span></span> Add Employee
-        </a>
+
+        {{-- Only show Add button to Super Admin --}}
+        @if(Auth::user()->role === 'super_admin')
+            <a href="{{ route('employees.create') }}" class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-6 rounded-xl shadow-md transition flex items-center gap-2">
+                Add Employee
+            </a>
+        @endif
     </div>
 
     @if (session('success'))
@@ -18,10 +22,9 @@
         </div>
     @endif
 
+    {{-- Filter Section --}}
     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6">
         <form action="{{ route('employees.index') }}" method="GET" class="flex flex-col md:flex-row gap-4 items-center">
-            
-            {{-- Search Bar --}}
             <div class="relative flex-grow w-full md:w-auto">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -31,7 +34,6 @@
                        placeholder="Search by name or ID...">
             </div>
 
-            {{-- Status Filter --}}
             <div class="w-full md:w-48">
                 <select name="status" onchange="this.form.submit()" class="w-full border-slate-200 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 py-2.5 shadow-sm text-slate-600 font-bold cursor-pointer">
                     <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>All Statuses</option>
@@ -41,9 +43,8 @@
                 </select>
             </div>
 
-            {{-- Reset Button --}}
             @if(request()->filled('search') || (request('status') && request('status') !== 'all'))
-                <a href="{{ route('employees.index') }}" class="w-full md:w-auto px-6 py-2.5 bg-red-50 text-red-600 border border-red-100 rounded-lg hover:bg-red-100 transition-colors font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap" title="Clear All Filters">
+                <a href="{{ route('employees.index') }}" class="w-full md:w-auto px-6 py-2.5 bg-red-50 text-red-600 border border-red-100 rounded-lg hover:bg-red-100 transition-colors font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap">
                     <span>✕</span> Reset
                 </a>
             @endif
@@ -63,13 +64,6 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-                {{-- 
-                    SPECIFIC SORT ORDER:
-                    1. Active
-                    2. On Leave
-                    3. Resigned
-                    4. Others (default)
-                --}}
                 @forelse($employees->sortBy(function($e) {
                     return match($e->status) {
                         'Active' => 1,
@@ -118,10 +112,16 @@
                     </td>
 
                     <td class="px-6 py-4 text-right">
-                        <a href="{{ route('employees.edit', $employee->id) }}" 
-                           class="text-xs font-bold uppercase transition-colors px-4 py-2 rounded-lg border shadow-sm text-slate-500 hover:bg-slate-100 bg-white border-slate-300">
-                            Edit
-                        </a>
+                        @if(Auth::user()->role === 'hr admin')
+                        <a href="{{ route('employees.show', $employee->id) }}" class="text-xs font-bold uppercase px-4 py-2 text-teal-600 hover:text-teal-800"> View </a>
+                        @endif
+                        
+                        @if(Auth::user()->role === 'super_admin')
+                            <a href="{{ route('employees.edit', $employee->id) }}" 
+                               class="text-xs font-bold uppercase transition-colors px-4 py-2 rounded-lg border shadow-sm text-slate-500 hover:bg-slate-100 bg-white border-slate-300">
+                                Edit
+                            </a>
+                        @endif
                     </td>
                 </tr>
                 @empty

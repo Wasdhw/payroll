@@ -114,9 +114,12 @@ class PayrollController extends Controller
         $item->update(['is_paid' => true]);
 
         $batch = $item->payrollBatch;
+
+        $batch->processed_by = auth()->user()->name ?? 'System'; 
         if (!$batch->items()->where('is_paid', false)->exists()) {
-            $batch->update(['status' => 'Paid']);
+        $batch->status = 'Paid';
         }
+        $batch->save();
 
         $details = json_decode($item->details);
         $pdf = Pdf::loadView('payroll.pdf-slip', compact('item', 'details'));

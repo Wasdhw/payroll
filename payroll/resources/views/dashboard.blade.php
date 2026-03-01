@@ -21,25 +21,24 @@
             </div>
         </button>
 
+        {{-- Dropdown Card --}}
         <div x-show="open" 
-             x-cloak
-             @click.away="open = false" 
-             class="dropdown-card"
-             x-transition>
-            
-            <div class="dropdown-header">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Manage Account</p>
-            </div>
-
-            <a href="{{ route('profile.edit') }}" class="dropdown-link"> My Profile</a>
-            
+                x-cloak
+                @click.away="open = false" 
+                class="dropdown-card"
+                x-transition>
+    
             @if(Auth::user()->role === 'super_admin')
+                <div class="dropdown-header">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Manage Account</p>
+                </div>
+                <a href="{{ route('profile.edit') }}" class="dropdown-link"> My Profile</a>
                 <a href="{{ route('settings.index') }}" class="dropdown-link border-b border-slate-100"> Register</a>
             @endif
 
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="dropdown-link-danger"> Log Out</button>
+                <button type="submit" class="dropdown-link-danger w-full text-left"> Log Out</button>
             </form>
         </div>
 
@@ -87,7 +86,6 @@
         </div>
 
         @php
-            // Automatically format the dates based on the $isFirstHalf variable from the Controller
             $payDate = $isFirstHalf ? date('M 15, Y') : date('M t, Y');
             $periodStart = $isFirstHalf ? date('M 01') : date('M 16');
             $periodEnd = $isFirstHalf ? date('M 15') : date('M t');
@@ -122,7 +120,6 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @php
-                        // Fetch the latest 5 batches directly
                         $recentBatches = \App\Models\PayrollBatch::latest()->take(5)->get();
                     @endphp
 
@@ -142,21 +139,26 @@
             </table>
         </div>
 
+        {{-- Sidebar Quick Actions --}}
         <div class="card h-fit">
             <h3 class="font-bold text-slate-700 mb-4">Quick Actions</h3>
             <div class="space-y-3">
-                <a href="{{ route('employees.create') }}" class="btn-action w-full flex items-center justify-center gap-2">
-                    <span></span> Add Employee
-                </a>
-                
-                <a href="{{ route('payroll.history') }}" class="btn-secondary w-full flex items-center justify-center gap-2 bg-white border border-slate-300 text-slate-700 font-bold py-2 rounded-xl hover:bg-slate-50 transition shadow-sm">
-                    <span></span> Generate Slip
-                </a>
                 
                 @if(Auth::user()->role === 'super_admin')
-                <a href="{{ route('settings.index') }}" class="btn-secondary w-full flex items-center justify-center gap-2 bg-white border border-slate-300 text-slate-700 font-bold py-2 rounded-xl hover:bg-slate-50 transition shadow-sm">
-                    <span></span> Settings
+                    <a href="{{ route('employees.create') }}" class="btn-action w-full flex items-center justify-center gap-2">
+                        Add Employee
+                    </a>
+                @endif
+                
+                <a href="{{ route('payroll.history') }}" class="btn-secondary w-full flex items-center justify-center gap-2 bg-white border border-slate-300 text-slate-700 font-bold py-2 rounded-xl hover:bg-slate-50 transition shadow-sm">
+                    Generate Slip
                 </a>
+                
+                {{-- Only Super Admin can see Settings --}}
+                @if(Auth::user()->role === 'super_admin')
+                    <a href="{{ route('settings.index') }}" class="btn-secondary w-full flex items-center justify-center gap-2 bg-white border border-slate-300 text-slate-700 font-bold py-2 rounded-xl hover:bg-slate-50 transition shadow-sm">
+                        Settings
+                    </a>
                 @endif
             </div>
         </div>
