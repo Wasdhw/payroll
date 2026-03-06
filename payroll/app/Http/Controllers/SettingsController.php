@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class SettingsController extends Controller
@@ -27,55 +30,62 @@ public function index()
     return view('settings.index', compact('users'));
 }
 
-public function store(Request $request)
-{
-    $validated = $request->validate([
-        'name' => ['required', 'string', 'max:255'],
-        'email' => ['required', 'email', 'unique:users,email'],
-        'password' => ['required', 'min:8', 'confirmed'],
-    ]);
-
-    User::create([
-        'name' => $validated['name'],
-        'email' => $validated['email'],
-        'password' => Hash::make($validated['password']),
-        'role' => 'hr_admin', 
-    ]);
-
-    return back()->with('success', 'New HR Admin registered successfully!');
-}
-
-    public function edit($id)
+public function sendVerificationCode(Request $request)
     {
-        $user = User::findOrFail($id);
-        return view('settings.edit', compact('user'));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'password' => ['nullable', 'min:8', 'confirmed'], 
+            'email' => ['required', 'email', 'unique:users,email'],
         ]);
 
-        $user->name = $validated['name'];
-        $user->email = $validated['email'];
+        $code = rand(100000, 999999);
 
-        if ($request->filled('password')) {
-            $user->password = Hash::make($validated['password']);
-        }
+        session()->put('pending_hr_account', [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'code' => $code,
+        ]);
 
-        $user->save();
+        Mail::raw("Your verification code is: {$code}", function ($message) use ($validated) {
+            $message->to($validated['email'])
+                    ->subject('HR Account Verification Code');
+        });
 
-        return redirect()->route('settings.index')->with('success', 'User account updated!');
+        return redirect()->route('settings.verify.form')->with('success', 'Verification code sent to the email!');
     }
 
-    public function destroy($id)
+    public function showVerificationForm()
     {
-        User::destroy($id);
-        return back()->with('success', 'User account deleted.');
+        if (!session()->has('pending_hr_account')) {
+            return redirect()->route('settings.index')->withErrors('No pending registration found.');
+        }
+
+        return view('settings.verify-code');
+    }
+
+    public function verifyAndCreate(Request $request)
+    {
+        $request->validate(['code' => 'required|numeric']);
+
+        $pendingUser = session('pending_hr_account');
+
+        if (!$pendingUser || $request->code != $pendingUser['code']) {
+            return back()->withErrors(['code' => 'Invalid or expired verification code.']);
+        }
+
+        $temporaryPassword = Str::random(12);
+
+        $user = User::create([
+            'name' => $pendingUser['name'],
+            'email' => $pendingUser['email'],
+            'password' => Hash::make($temporaryPassword),
+            'role' => 'hr_admin',
+            'email_verified_at' => now(), 
+        ]);
+
+        Mail::to($user->email)->send(new \App\Mail\NewHrAccountMail($user->email, $temporaryPassword));
+
+        session()->forget('pending_hr_account');
+
+        return redirect()->route('settings.index')->with('success', 'HR Account verified and created successfully. Login details have been emailed.');
     }
 }

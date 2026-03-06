@@ -32,7 +32,9 @@
                 <div class="dropdown-header">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Manage Account</p>
                 </div>
+            @endif
                 <a href="{{ route('profile.edit') }}" class="dropdown-link"> My Profile</a>
+            @if(Auth::user()->role === 'super_admin')
                 <a href="{{ route('settings.index') }}" class="dropdown-link border-b border-slate-100"> Register</a>
             @endif
 
@@ -157,7 +159,7 @@
                 {{-- Only Super Admin can see Settings --}}
                 @if(Auth::user()->role === 'super_admin')
                     <a href="{{ route('settings.index') }}" class="btn-secondary w-full flex items-center justify-center gap-2 bg-white border border-slate-300 text-slate-700 font-bold py-2 rounded-xl hover:bg-slate-50 transition shadow-sm">
-                        Settings
+                        Register HR Account
                     </a>
                 @endif
             </div>

@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmployeeController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PayrollController;
+
 
 Route::get('/', function () {
     return view('login');
@@ -19,12 +21,13 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth')->group(function () {
     
     // Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified_hr'])->name('dashboard');
 
     // Profile Management 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile/info', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+ 
 
     // Settings / User Management
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
@@ -32,6 +35,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/{id}/edit', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings/{id}', [SettingsController::class, 'update'])->name('settings.update');
     Route::delete('/settings/{id}', [SettingsController::class, 'destroy'])->name('settings.destroy');
+    Route::post('/settings/send-code', [SettingsController::class, 'sendVerificationCode'])->name('settings.send-code');
+    Route::get('/settings/verify-code', [SettingsController::class, 'showVerificationForm'])->name('settings.verify.form');
+    Route::post('/settings/verify-code', [SettingsController::class, 'verifyAndCreate'])->name('settings.verify.submit');
     
     // Employee Management
     Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
