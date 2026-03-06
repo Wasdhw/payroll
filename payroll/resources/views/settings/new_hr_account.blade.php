@@ -10,7 +10,5 @@
     <p><strong>Your temporary password:</strong> {{ $password }}</p>
     
     <p>Please log in and change your password immediately.</p>
-    
-    <p>Note: You may be required to verify your email address upon logging in.</p>
 </body>
 </html>
