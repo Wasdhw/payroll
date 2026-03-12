@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\Attendance;
+use App\Models\AttendanceLock;
 use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
@@ -15,7 +16,6 @@ class AttendanceController extends Controller
         
         $month = date('m', strtotime($selectedDate));
         $year = date('Y', strtotime($selectedDate));
-
 
         $query = Employee::query();
 
@@ -50,7 +50,11 @@ class AttendanceController extends Controller
             ->unique()
             ->toArray();
 
-        return view('attendance', compact('employees', 'loggedDates', 'selectedDate', 'search'));
+        $isLocked = AttendanceLock::where('lock_date', $selectedDate)
+                                  ->where('is_locked', true)
+                                  ->exists();
+
+        return view('attendance', compact('employees', 'loggedDates', 'selectedDate', 'search', 'isLocked'));
     }
 
     public function store(Request $request)
@@ -64,6 +68,11 @@ class AttendanceController extends Controller
             'allowance' => 'nullable|numeric|min:0',
             'incentive' => 'nullable|numeric|min:0',
         ]);
+
+        $isLocked = AttendanceLock::where('lock_date', $validated['attendance_date'])->where('is_locked', true)->exists();
+        if ($isLocked) {
+            return redirect()->back()->withErrors(['error' => 'Attendance for this date is frozen and cannot be modified.']);
+        }
 
         Attendance::updateOrCreate(
             [
@@ -94,18 +103,13 @@ class AttendanceController extends Controller
         
         $header = true;
         $successCount = 0;
+        $skippedCount = 0;
 
         while (($row = fgetcsv($handle, 1000, ",")) !== FALSE) {
             if ($header) {
                 $header = false; 
                 continue;
             }
-
-            // 0: Employee ID 
-            // 1: Date 
-            // 2: Status 
-            // 3: Hours Worked 
-            // 4: Overtime Hours 
 
             $empIdString = $row[0] ?? null;
             $date = $row[1] ?? null;
@@ -115,13 +119,21 @@ class AttendanceController extends Controller
 
             if (!$empIdString || !$date) continue; 
 
+            $formattedDate = date('Y-m-d', strtotime($date));
+
+            $isLocked = AttendanceLock::where('lock_date', $formattedDate)->where('is_locked', true)->exists();
+            if ($isLocked) {
+                $skippedCount++;
+                continue;
+            }
+
             $employee = \App\Models\Employee::where('employee_id', $empIdString)->first();
 
             if ($employee) {
                 \App\Models\Attendance::updateOrCreate(
                     [
                         'employee_id' => $employee->id,
-                        'attendance_date' => date('Y-m-d', strtotime($date)),
+                        'attendance_date' => $formattedDate,
                     ],
                     [
                         'status' => ucfirst($status),
@@ -135,6 +147,25 @@ class AttendanceController extends Controller
 
         fclose($handle);
 
-        return back()->with('success', "Biometrics imported successfully! {$successCount} records updated.");
+        $message = "Biometrics imported! {$successCount} records updated.";
+        if ($skippedCount > 0) {
+            $message .= " ({$skippedCount} records skipped due to frozen dates).";
+        }
+
+        return back()->with('success', $message);
+    }
+
+    public function toggleLock(Request $request)
+    {
+        $request->validate(['date' => 'required|date']);
+        $date = $request->input('date');
+
+        $lock = AttendanceLock::firstOrCreate(['lock_date' => $date]);
+        $lock->is_locked = !$lock->is_locked;
+        $lock->save();
+
+        $statusMessage = $lock->is_locked ? 'frozen securely' : 'unlocked and opened for edits';
+
+        return redirect()->back()->with('success', "Attendance data for {$date} is now {$statusMessage}.");
     }
 }

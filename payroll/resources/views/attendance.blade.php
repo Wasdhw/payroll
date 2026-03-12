@@ -18,13 +18,44 @@
 
     <header class="page-header flex justify-between items-center px-8 py-4 bg-white border-b border-slate-200 mb-8">
         <div>
-            <h2 class="font-bold text-slate-700 text-lg">Attendance & Incentives</h2>
+            <h2 class="font-bold text-slate-700 text-lg flex items-center gap-2">
+                Attendance & Incentives
+                @if($isLocked)
+                    <span class="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-0.5 rounded border border-red-200 uppercase tracking-wider">Frozen</span>
+                @endif
+            </h2>
             <p class="text-xs text-slate-500">Managing records for: <span class="font-bold text-teal-600">{{ \Carbon\Carbon::parse($selectedDate)->format('F d, Y') }}</span></p>
         </div>
+        
         <div class="flex items-center gap-3">
-            <button @click="importModalOpen = true" class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-4 rounded-xl text-xs transition-colors shadow-sm flex items-center gap-2">
-                <span></span> Import Biometrics
+<form action="{{ route('attendance.toggle-lock') }}" method="POST" class="m-0">
+    @csrf
+    <input type="hidden" name="date" value="{{ $selectedDate }}">
+
+    @if($isLocked)
+        @if(auth()->user()->role == 'super_admin')
+            <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-6 rounded-xl text-sm transition-all shadow-md flex items-center gap-2">
+                <span>Undo</span>
             </button>
+        @else
+            <div class="bg-gray-400 text-white font-bold py-2 px-6 rounded-xl text-sm flex items-center gap-2 opacity-75 cursor-not-allowed">
+                <i class="fas fa-lock text-xs"></i>
+                <span>Data Locked</span>
+            </div>
+        @endif
+    @else
+        <button type="submit" class="bg-teal-700 hover:bg-teal-800 text-white font-bold py-2 px-6 rounded-xl text-sm transition-all shadow-md flex items-center gap-2">
+            <span>Save</span>
+        </button>
+    @endif
+</form>
+
+            {{-- Import Biometrics - Hide if Locked --}}
+            @if(!$isLocked)
+                <button @click="importModalOpen = true" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition-colors shadow-sm flex items-center gap-2">
+                    <span>📠</span> Import Biometrics
+                </button>
+            @endif
         </div>
     </header>
 
@@ -42,7 +73,7 @@
         @if ($errors->any())
             <div x-data="{ show: true }" x-show="show" class="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl shadow-sm relative">
                 <button @click="show = false" class="absolute top-3 right-4 text-red-600 font-bold">&times;</button>
-                <p class="text-xs font-bold uppercase tracking-wider mb-1">Upload Failed:</p>
+                <p class="text-xs font-bold uppercase tracking-wider mb-1">Action Failed:</p>
                 <ul class="list-disc pl-5 text-sm font-medium">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -60,7 +91,7 @@
                 </a>
                 
                 <div class="text-center">
-                    <h3 class="font-bold text-slate-700 text-lg flex items-center gap-2">
+                    <h3 class="font-bold text-slate-700 text-lg flex items-center justify-center gap-2">
                         <span>📅</span> {{ \Carbon\Carbon::parse($selectedDate)->format('M d, Y') }}
                     </h3>
                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{{ \Carbon\Carbon::parse($selectedDate)->format('l') }}</p>
@@ -75,7 +106,8 @@
             <div class="flex flex-col md:flex-row items-center gap-3 w-full lg:w-auto">
                 
                 <form action="{{ route('attendance.index') }}" method="GET" class="relative w-full md:w-64">
-                    <input type="hidden" name="date" value="{{ $selectedDate }}"> <div class="relative group">
+                    <input type="hidden" name="date" value="{{ $selectedDate }}"> 
+                    <div class="relative group">
                         <input type="text" 
                                name="search" 
                                value="{{ request('search') }}" 
@@ -98,7 +130,8 @@
                 <div class="h-8 w-px bg-slate-200 hidden md:block"></div>
 
                 <form action="{{ route('attendance.index') }}" method="GET" class="flex items-center m-0 w-full md:w-auto">
-                    <input type="hidden" name="search" value="{{ request('search') }}"> <input type="date" name="date" value="{{ $selectedDate }}" onchange="this.form.submit()" 
+                    <input type="hidden" name="search" value="{{ request('search') }}"> 
+                    <input type="date" name="date" value="{{ $selectedDate }}" onchange="this.form.submit()" 
                            class="w-full md:w-auto text-xs border-slate-200 rounded-lg text-slate-600 focus:ring-teal-500 focus:border-teal-500 py-2 px-3 shadow-sm cursor-pointer hover:bg-slate-50 transition-colors font-bold">
                 </form>
 
@@ -133,7 +166,6 @@
                     @forelse($employees as $employee)
                     
                     @php
-                        // --- SMART RESIGNED FILTER ---
                         $hasLogsForThisPeriod = $employee->attendances->isNotEmpty();
 
                         if($employee->status === 'Resigned' && !$hasLogsForThisPeriod) {
@@ -186,20 +218,24 @@
                         </td>
                         
                         <td class="px-6 py-4 text-right">
-                            <button type="button" 
-                                    @click.stop="
-                                        logModalOpen = true; 
-                                        empId = '{{ $employee->id }}'; 
-                                        empName = '{{ addslashes($employee->first_name . ' ' . $employee->last_name) }}';
-                                        logStatus = '{{ $todayLog ? $todayLog->status : 'Present' }}';
-                                        logHours = {{ $todayLog ? $todayLog->hours_worked : 8 }};
-                                        logOt = {{ $todayLog ? $todayLog->overtime_hours : 0 }};
-                                        logAllowance = {{ $todayLog ? $todayLog->allowance : 0 }};
-                                        logIncentive = {{ $todayLog ? $todayLog->incentive : 0 }};
-                                    " 
-                                    class="text-xs font-bold uppercase transition-colors px-4 py-2 rounded-lg shadow-sm border {{ $todayLog ? 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100' : 'bg-teal-700 text-white border-teal-800 hover:bg-teal-800' }}">
-                                {{ $todayLog ? 'Edit' : 'Log Entry' }}
-                            </button>
+                            @if($isLocked)
+                                <span class="text-[10px] bg-slate-100 border border-slate-200 text-slate-400 px-3 py-1.5 rounded-lg font-bold uppercase cursor-not-allowed inline-block">Locked</span>
+                            @else
+                                <button type="button" 
+                                        @click.stop="
+                                            logModalOpen = true; 
+                                            empId = '{{ $employee->id }}'; 
+                                            empName = '{{ addslashes($employee->first_name . ' ' . $employee->last_name) }}';
+                                            logStatus = '{{ $todayLog ? $todayLog->status : 'Present' }}';
+                                            logHours = {{ $todayLog ? $todayLog->hours_worked : 8 }};
+                                            logOt = {{ $todayLog ? $todayLog->overtime_hours : 0 }};
+                                            logAllowance = {{ $todayLog ? $todayLog->allowance : 0 }};
+                                            logIncentive = {{ $todayLog ? $todayLog->incentive : 0 }};
+                                        " 
+                                        class="text-xs font-bold uppercase transition-colors px-4 py-2 rounded-lg shadow-sm border {{ $todayLog ? 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100' : 'bg-teal-700 text-white border-teal-800 hover:bg-teal-800' }}">
+                                    {{ $todayLog ? 'Edit' : 'Log Entry' }}
+                                </button>
+                            @endif
                         </td>
                     </tr>
 
@@ -278,6 +314,7 @@
         </div>
     </div>
 
+    {{-- LOG ENTRY MODAL --}}
     <div x-show="logModalOpen" 
          x-cloak 
          class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
@@ -327,7 +364,6 @@
                 <div class="grid grid-cols-4 gap-4 mb-8">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-2">Reg. Hrs</label>
-                        {{-- UPDATED INPUT WITH LIMITS AND ALPINE CLAMPING --}}
                         <input type="number" 
                                step="0.5" 
                                min="0" 
@@ -359,6 +395,7 @@
         </div>
     </div>
 
+    {{-- IMPORT MODAL --}}
     <div x-show="importModalOpen" 
          x-cloak 
          class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"

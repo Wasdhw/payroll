@@ -88,4 +88,11 @@ public function sendVerificationCode(Request $request)
 
         return redirect()->route('settings.index')->with('success', 'HR Account verified and created successfully. Login details have been emailed.');
     }
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
+
+        return redirect()->back()->with('success', 'User deleted successfully.');
+    }
 }

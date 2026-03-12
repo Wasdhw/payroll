@@ -38,14 +38,14 @@
                         
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Email Address</label>
-                            <input type="email" name="email" value="{{ old('email') }}" class="w-full rounded-xl border-slate-300 text-base py-3 px-4 focus:ring-teal-500 focus:border-teal-500 @error('email') border-red-500 bg-red-50 @enderror" required>
+                            <input type="email" name="email" value="{{ old('email') }}" class="w-full rounded-xl border-slate-300 text-base py-3 px-4 focus:ring-teal-500 focus:border-teal-500 cursor-not-allowed @error('email') border-red-500 bg-red-50 @enderror" required>
                             @error('email') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                         </div>
                         
                         {{-- Password inputs removed. The controller will now generate and email them. --}}
                         
                         <button type="submit" class="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-3 rounded-lg transition shadow-md mt-6">
-                            Create Account & Email Login
+                            Create Account
                         </button>
                     </div>
                 </form>

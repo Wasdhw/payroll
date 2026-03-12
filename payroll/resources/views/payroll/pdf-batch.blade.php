@@ -154,7 +154,7 @@
     </table>
 
     <div class="text-center" style="margin-top: 40px; font-size: 10px; color: #9ca3af; font-style: italic;">
-        Generated on {{ date('Y-m-d H:i') }} by {{ $batch->processed_by ?? 'System' }}
+        Generated on {{ date('Y-m-d H:i') }} by {{ $item->payrollBatch->processed_by }}
     </div>
 </div>
 @endforeach

@@ -40,8 +40,8 @@
 
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
-                            <input type="email" name="email" value="{{ old('email', $user->email) }}" 
-                                   class="w-full border-slate-300 rounded-xl text-sm px-4 py-3 shadow-sm focus:ring-teal-500 focus:border-teal-500 transition-all hover:border-teal-300">
+                            <input type="email" name="email" value="{{ old('email', $user->email) }}" readonly
+                                   class="w-full border-slate-300 rounded-xl text-sm px-4 py-3 bg-gray-100 shadow-sm focus:ring-teal-500 focus:border-teal-500 transition-all hover:border-teal-300">
                             @error('email') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                         </div>
                     </div>

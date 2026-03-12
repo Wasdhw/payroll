@@ -32,7 +32,6 @@ Route::middleware('auth')->group(function () {
     // Settings / User Management
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings', [SettingsController::class, 'store'])->name('settings.store');
-    Route::get('/settings/{id}/edit', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings/{id}', [SettingsController::class, 'update'])->name('settings.update');
     Route::delete('/settings/{id}', [SettingsController::class, 'destroy'])->name('settings.destroy');
     Route::post('/settings/send-code', [SettingsController::class, 'sendVerificationCode'])->name('settings.send-code');
@@ -51,6 +50,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     Route::post('/attendance/import', [App\Http\Controllers\AttendanceController::class, 'import'])->name('attendance.import');
+    Route::post('/attendance/toggle-lock', [\App\Http\Controllers\AttendanceController::class, 'toggleLock'])->name('attendance.toggle-lock');
 
     // Payroll Route
     Route::get('/payroll', [PayrollController::class, 'index'])->name('payroll.index');

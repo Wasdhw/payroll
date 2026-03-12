@@ -48,7 +48,14 @@
                 <div class="md:col-span-1">
                     <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">Date of Birth</label>
                     <p class="w-full rounded-xl py-3 px-4 bg-white border border-slate-200 text-slate-700 font-medium shadow-sm">
-                        {{ $employee->birth_date }}
+                    {{ $employee->birth_date }}
+                     </p>
+                </div>
+
+                <div class="md:col-span-1">
+                    <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">Age</label>
+                    <p class="w-full rounded-xl py-3 px-4 bg-slate-50 border border-slate-200 text-[#003366] font-bold shadow-sm">
+                    {{ $employee->age }} years old
                     </p>
                 </div>
 

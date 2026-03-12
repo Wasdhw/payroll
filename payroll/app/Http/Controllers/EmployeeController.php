@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Carbon\Carbon;
 
 class EmployeeController extends Controller
 {
@@ -12,10 +13,8 @@ class EmployeeController extends Controller
     {
         $search = $request->query('search');
         $status = $request->query('status');
-
         $query = Employee::query();
 
-        // Search by Name or ID
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
@@ -24,19 +23,17 @@ class EmployeeController extends Controller
             });
         }
 
-        // Filter by Status (Active, Resigned, etc.)
         if ($status && $status !== 'all') {
             $query->where('status', $status);
         }
 
         $employees = $query->latest()->get();
-
         return view('employees.index', compact('employees', 'search', 'status'));
     }
+
     public function show($id)
     {
-        $employee = \App\Models\Employee::findOrFail($id);
-
+        $employee = Employee::findOrFail($id);
         return view('employees.show', compact('employee'));
     }
 
@@ -50,75 +47,57 @@ class EmployeeController extends Controller
         return view('employees.edit', compact('employee'));
     }
 
+    public function store(Request $request)
+    {
+    if ($request->has('salary')) {
+        $request->merge([
+            'salary' => str_replace(',', '', $request->salary)
+        ]);
+    }
+
+    $validated = $this->validateEmployee($request);
+
+    Employee::create($validated);
+
+    return redirect()->route('employees.index')
+        ->with('success', 'Employee Record Created!');
+    }
+
     public function update(Request $request, Employee $employee)
     {
+        if ($request->has('salary')) {
+            $request->merge(['salary' => str_replace(',', '', $request->salary)]);
+        }
 
-    
-        $validated = $request->validate([
-            'employee_id'             => 'required|unique:employees,employee_id,' . $employee->id,
-            'first_name'              => 'required|string',
-            'middle_name'             => 'nullable|string',
-            'last_name'               => 'required|string',
-            'birth_date'              => 'required|date_format:Y-m-d',
-            'gender'                  => 'required',
-            'civil_status'            => 'required',
-            'address'                 => 'required',
-            'phone'                   => 'required|digits:11', 
-            'email'                   => 'required|email|unique:employees,email,' . $employee->id,
-            'department'              => 'required',
-            'job_title'               => 'required',
-            'employment_type'         => ['required', Rule::in(['Regular', 'Probationary', 'Contractual', 'Part-Time'])],            
-            'join_date'               => 'required|date_format:Y-m-d',
-            'work_schedule'           => ['required', Rule::in(['Daily', 'Hourly'])],            
-            'salary'                  => 'required|numeric',
-            'salary_type'             => ['required', Rule::in(['Monthly', 'Daily', 'Hourly'])],
-            'status'                  => 'required',
-            'emergency_contact_name'  => 'required|string',
-            'emergency_contact_phone' => 'required|digits:11',
-            'supervisor'              => 'required|string',
-        ], [
-
-            'phone.digits' => 'The contact number must be exactly 11 digits (e.g. 09123456789).',
-            'emergency_contact_phone.digits' => 'The emergency contact number must be exactly 11 digits.',
-        ]);
+        $validated = $this->validateEmployee($request, $employee->id);
 
         $employee->update($validated);
 
         return redirect()->route('employees.index')->with('success', 'Employee updated successfully!');
     }
 
-    public function store(Request $request)
+    protected function validateEmployee(Request $request, $id = null)
     {
-        $validated = $request->validate([
-            'employee_id'             => 'required|unique:employees',
-            'first_name'              => 'required|string',
-            'middle_name'             => 'nullable|string',
-            'last_name'               => 'required|string',
-            'birth_date'              => 'required|date_format:Y-m-d',
-            'gender'                  => 'required',
-            'civil_status'            => 'required',
-            'address'                 => 'required',
-            'phone'                   => 'required|digits:11',
-            'email'                   => 'required|email|unique:employees',
-            'department'              => 'required',
-            'job_title'               => 'required',
-            'employment_type'         => ['required', Rule::in(['Regular', 'Probationary', 'Contractual', 'Part-Time'])],
-            'join_date'               => 'required|date_format:Y-m-d',
-            'work_schedule'           => ['required', Rule::in(['Daily', 'Hourly'])],
-            'salary'                  => 'required|numeric',
-            'salary_type'             => ['required', Rule::in(['Monthly', 'Daily', 'Hourly'])],
-            'status'                  => 'required',
-            'emergency_contact_name'  => 'required|string',
-            'emergency_contact_phone' => 'required|digits:11',
-            'supervisor'              => 'required|string',
-        ], [
-
-            'phone.digits' => 'The contact number must be exactly 11 digits (e.g. 09123456789).',
-            'emergency_contact_phone.digits' => 'The emergency contact number must be exactly 11 digits.',
+        return $request->validate([
+            'employee_id'     => 'required|unique:employees,employee_id,' . $id,
+            'first_name'      => 'required|string',
+            'middle_name'     => 'nullable|string',
+            'last_name'       => 'required|string',
+            'birth_date'      => 'required|date',
+            'gender'          => 'required',
+            'civil_status'    => 'required',
+            'address'         => 'required',
+            'phone'           => 'required|digits:11',
+            'email'           => 'required|email|unique:employees,email,' . $id,
+            'department'      => 'required',
+            'job_title'       => 'required',
+            'employment_type' => ['required', Rule::in(['Regular', 'Probationary', 'Contractual', 'Part-Time'])],
+            'join_date'       => 'required|date',
+            'work_schedule'   => ['required', Rule::in(['Daily', 'Hourly'])],
+            'salary'          => 'required|numeric',
+            'salary_type'     => ['required', Rule::in(['Monthly', 'Daily', 'Hourly', 'Daily Rate', 'Hourly Rate'])],
+            'status'          => 'required',
+            'supervisor'      => 'required|string',
         ]);
-
-        Employee::create($validated);
-
-        return redirect()->route('employees.index')->with('success', 'Employee Record Created!');
     }
 }

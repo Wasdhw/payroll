@@ -25,10 +25,16 @@ class PayrollController extends Controller
         $endDate = $isFirstHalf ? date('Y-m-15') : date('Y-m-t'); 
 
         $isProcessed = PayrollBatch::where('period_start', $startDate)
-                                   ->where('period_end', $endDate)
-                                   ->exists();
+                                    ->where('period_end', $endDate)
+                                    ->exists();
 
-        $query = Employee::with(['attendances' => function($q) use ($startDate, $endDate) {
+
+        $query = Employee::where(function($q) use ($startDate, $endDate) {
+            $q->where('status', '!=', 'Resigned')
+              ->orWhereHas('attendances', function($sub) use ($startDate, $endDate) {
+                  $sub->whereBetween('attendance_date', [$startDate, $endDate]);
+              });
+        })->with(['attendances' => function($q) use ($startDate, $endDate) {
             $q->whereBetween('attendance_date', [$startDate, $endDate]);
         }]);
 
@@ -79,7 +85,6 @@ class PayrollController extends Controller
     public function finalize($id)
     {
         $batch = PayrollBatch::findOrFail($id);
-        
         $batch->status = 'Paid';
         $batch->save(); 
 
@@ -114,10 +119,10 @@ class PayrollController extends Controller
         $item->update(['is_paid' => true]);
 
         $batch = $item->payrollBatch;
-
         $batch->processed_by = auth()->user()->name ?? 'System'; 
+        
         if (!$batch->items()->where('is_paid', false)->exists()) {
-        $batch->status = 'Paid';
+            $batch->status = 'Paid';
         }
         $batch->save();
 
@@ -174,12 +179,23 @@ class PayrollController extends Controller
 
             $batchGross = 0; 
             $batchNet = 0;
-            $employees = Employee::all();
+
+            // Only fetch relevant employees for the batch
+            $employees = Employee::where(function($q) use ($startDate, $endDate) {
+                $q->where('status', '!=', 'Resigned')
+                  ->orWhereHas('attendances', function($sub) use ($startDate, $endDate) {
+                      $sub->whereBetween('attendance_date', [$startDate, $endDate]);
+                  });
+            })->get();
 
             foreach ($employees as $employee) {
-
                 $calc = $this->calculatePayroll($employee, $startDate, $endDate, true);
                 
+                // SAFETY: Skip resigned people who have 0 or negative pay (prevents empty slips)
+                if ($employee->status === 'Resigned' && $calc->net_pay <= 0) {
+                    continue;
+                }
+
                 PayrollItem::create([
                     'payroll_batch_id' => $batch->id,
                     'employee_id' => $employee->id,
@@ -208,7 +224,7 @@ class PayrollController extends Controller
         });
     }
 
-private function calculatePayroll($employee, $start = null, $end = null, $isSavingBatch = false) {
+    private function calculatePayroll($employee, $start = null, $end = null, $isSavingBatch = false) {
         $startDate = Carbon::parse($start);
         $endDate = Carbon::parse($end);
 
@@ -224,18 +240,13 @@ private function calculatePayroll($employee, $start = null, $end = null, $isSavi
         $checkUntil = $endDate->isFuture() ? Carbon::today() : $endDate;
 
         for ($date = $startDate->copy(); $date->lte($checkUntil); $date->addDay()) {
-            
-            if ($date->isSunday()) { 
-                continue; 
-            }
+            if ($date->isSunday()) { continue; }
 
             $log = $attendances->firstWhere('attendance_date', $date->format('Y-m-d'));
 
             if (!$log) {
-
                 if ($isSavingBatch) {
                     $daysAbsent++; 
-                    
                     Attendance::firstOrCreate([
                         'employee_id' => $employee->id,
                         'attendance_date' => $date->format('Y-m-d')
@@ -273,7 +284,7 @@ private function calculatePayroll($employee, $start = null, $end = null, $isSavi
         
         $grossPay = $netBasic + $totalAdditions;
 
-        // Deductions
+        // Deductions (SSS 4.5%, Philhealth 2%, Pagibig 100 fixed)
         $sss = ($employee->salary * 0.045) / 2; 
         $philhealth = ($employee->salary * 0.02) / 2;
         $pagibig = 100.00; 
@@ -282,6 +293,7 @@ private function calculatePayroll($employee, $start = null, $end = null, $isSavi
         $taxableIncome = max(0, $grossPay - $mandatoryDeductions);
         $tax = 0;
 
+        // Simplified Withholding Tax Logic
         if ($taxableIncome > 333333) { $tax = 91770.70 + (($taxableIncome - 333333) * 0.35); } 
         elseif ($taxableIncome > 83333) { $tax = 16770.70 + (($taxableIncome - 83333) * 0.30); } 
         elseif ($taxableIncome > 33333) { $tax = 4270.70 + (($taxableIncome - 33333) * 0.25); } 
