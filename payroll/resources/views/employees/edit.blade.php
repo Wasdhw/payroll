@@ -16,6 +16,7 @@
             workSchedule: '{{ old('work_schedule', $employee->work_schedule) }}',
             salaryType: '{{ old('salary_type', $employee->salary_type) }}',
             birthDate: '{{ old('birth_date', \Carbon\Carbon::parse($employee->birth_date)->format('Y-m-d')) }}',
+            phone: '{{ old('phone', $employee->phone) }}',
             age: '',
             rawSalary: '{{ old('salary', $employee->salary) }}',
             displaySalary: '',
@@ -55,8 +56,15 @@
                     this.salaryType = 'Hourly';
                 }
             },
+            
             get isRegular() { return this.employmentType === 'Regular'; },
-            get isHourlySchedule() { return this.workSchedule === 'Hourly'; }
+            get isHourlySchedule() { return this.workSchedule === 'Hourly'; },
+            
+            // Check if phone has value but is less than 11 digits
+            get isPhoneInvalid() { 
+                let cleanPhone = this.phone ? this.phone.replace(/\D/g, '') : '';
+                return cleanPhone.length > 0 && cleanPhone.length < 11; 
+            }
         }"
         x-init="
             calculateAge();
@@ -98,6 +106,7 @@
                     <div>
                         <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">Date of Birth <span class="text-red-500">*</span></label>
                         <input type="date" name="birth_date" x-model="birthDate" @change="calculateAge()" 
+                               max="{{ now()->format('Y-m-d') }}"
                                class="w-full rounded-xl py-3 px-4 transition-all @error('birth_date') border-red-500 bg-red-50 ring-1 ring-red-500 @else border-slate-300 focus:ring-teal-500 focus:border-teal-500 @enderror shadow-sm">
                         @error('birth_date') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                     </div>
@@ -135,9 +144,21 @@
                         <input type="text" name="address" value="{{ old('address', $employee->address) }}" class="w-full rounded-xl py-3 px-4 border-slate-300 shadow-sm">
                     </div>
 
+                    {{-- Contact Number Field --}}
                     <div>
                         <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">Contact Number</label>
-                        <input type="text" name="phone" value="{{ old('phone', $employee->phone) }}" class="w-full rounded-xl py-3 px-4 border-slate-300 shadow-sm">
+                        <input type="text" name="phone" 
+                               x-model="phone"
+                               x-mask="99999999999" 
+                               maxlength="11"
+                               class="w-full rounded-xl py-3 px-4 transition-all shadow-sm"
+                               :class="isPhoneInvalid ? 'border-red-500 bg-red-50 ring-1 ring-red-500' : 'border-slate-300 focus:ring-teal-500 focus:border-teal-500'">
+                        
+                        {{-- Alpine.js Frontend Error --}}
+                        <p x-show="isPhoneInvalid" style="display: none;" class="text-red-500 text-xs mt-1 font-bold">Contact number must be exactly 11 digits.</p>
+                        
+                        {{-- Laravel Backend Error --}}
+                        @error('phone') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="md:col-span-2">
@@ -208,7 +229,6 @@
                             <option value="Daily">Daily</option>
                             <option value="Hourly">Hourly</option>
                         </select>
-                        {{-- Hidden input sends data when the dropdown above is disabled --}}
                         <template x-if="isRegular">
                             <input type="hidden" name="work_schedule" :value="workSchedule">
                         </template>
@@ -221,7 +241,6 @@
                             <option value="Daily">Daily Rate</option>
                             <option value="Hourly">Hourly Rate</option>
                         </select>
-                        {{-- FIX: Hidden input ensures 'Hourly' is sent to the DB even if disabled --}}
                         <template x-if="isHourlySchedule || isRegular">
                             <input type="hidden" name="salary_type" :value="salaryType">
                         </template>
@@ -247,8 +266,11 @@
 
             <div class="flex justify-end items-center gap-6 mt-6 pb-12">
                 <a href="{{ route('employees.index') }}" class="text-slate-500 hover:text-slate-800 font-bold text-lg px-6 py-4">Cancel</a>
+                
+                {{-- Disable button if phone is invalid --}}
                 <button type="submit" 
-                        class="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xl py-4 px-12 rounded-xl transition-all shadow-xl hover:-translate-y-1 active:translate-y-0">
+                        :disabled="isPhoneInvalid"
+                        class="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xl py-4 px-12 rounded-xl transition-all shadow-xl hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
                     Save Employee Record
                 </button>
             </div>

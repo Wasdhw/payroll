@@ -16,6 +16,7 @@
             workSchedule: '{{ old('work_schedule', 'Daily') }}',
             salaryType: '{{ old('salary_type', 'Monthly') }}',
             birthDate: '{{ old('birth_date', '') }}',
+            phone: '{{ old('phone', '') }}',
             age: '',
             rawSalary: '{{ old('salary', '') }}',
             displaySalary: '',
@@ -56,7 +57,13 @@
                 }
             },
             get isRegular() { return this.employmentType === 'Regular'; },
-            get isHourlySchedule() { return this.workSchedule === 'Hourly'; }
+            get isHourlySchedule() { return this.workSchedule === 'Hourly'; },
+            
+            // Check if phone has value but is less than 11 digits
+            get isPhoneInvalid() { 
+                let cleanPhone = this.phone ? this.phone.replace(/\D/g, '') : '';
+                return cleanPhone.length > 0 && cleanPhone.length < 11; 
+            }
         }"
         x-init="
             calculateAge();
@@ -99,7 +106,9 @@
 
                     <div>
                         <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">Date of Birth <span class="text-red-500">*</span></label>
-                        <input type="date" name="birth_date" x-model="birthDate" @change="calculateAge()" class="w-full rounded-xl py-3 px-4 border border-slate-300 focus:ring-teal-500 focus:border-teal-500 shadow-sm">
+                        <input type="date" name="birth_date" x-model="birthDate" @change="calculateAge()" 
+                               max="{{ now()->format('Y-m-d') }}"
+                               class="w-full rounded-xl py-3 px-4 border border-slate-300 focus:ring-teal-500 focus:border-teal-500 shadow-sm">
                         @error('birth_date') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                     </div>
 
@@ -136,7 +145,15 @@
 
                     <div>
                         <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">Contact Number</label>
-                        <input type="text" name="phone" value="{{ old('phone') }}" x-mask="99999999999" class="w-full rounded-xl py-3 px-4 border border-slate-300 shadow-sm">
+                        <input type="text" name="phone" 
+                               x-model="phone" 
+                               x-mask="99999999999" 
+                               maxlength="11"
+                               placeholder="09123456789"
+                               :class="isPhoneInvalid ? 'border-red-500 bg-red-50 ring-1 ring-red-500' : 'border-slate-300 focus:ring-teal-500 focus:border-teal-500'"
+                               class="w-full rounded-xl py-3 px-4 border shadow-sm transition-all">
+                        <p x-show="isPhoneInvalid" style="display: none;" class="text-red-500 text-xs mt-1 font-bold">Contact number must be exactly 11 digits.</p>
+                        @error('phone') <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="md:col-span-2">
@@ -187,7 +204,6 @@
                                class="w-full rounded-xl py-3 px-4 border border-slate-300 shadow-sm">
                     </div>
 
-                    {{-- Locked Auto-Active Status --}}
                     <div>
                         <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-2">Status</label>
                         <div class="pointer-events-none">
@@ -237,7 +253,8 @@
             <div class="flex justify-end items-center gap-6 mt-6 pb-12">
                 <a href="{{ route('employees.index') }}" class="text-slate-500 hover:text-slate-800 font-bold text-lg px-6 py-4">Cancel</a>
                 <button type="submit" 
-                        class="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xl py-4 px-12 rounded-xl transition-all shadow-xl hover:-translate-y-1 active:translate-y-0">
+                        :disabled="isPhoneInvalid"
+                        class="bg-teal-700 hover:bg-teal-800 text-white font-bold text-xl py-4 px-12 rounded-xl transition-all shadow-xl hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
                     Save Employee Record
                 </button>
             </div>
